@@ -1,0 +1,3 @@
+selenium
+tqdm
+webdriver_manager
