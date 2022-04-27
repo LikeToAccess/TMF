@@ -12,6 +12,7 @@
 #==============================================================================
 import os
 import time
+import platform
 from selenium import webdriver
 from selenium.common.exceptions import *
 from selenium.webdriver.common.by import By
@@ -24,8 +25,12 @@ from tqdm import tqdm
 from settings import *
 
 
+OS = platform.system()
+
+
 class Scraper:
 	def __init__(self):
+		self.begin_init_timestamp = time.time()
 		options = Options()
 		user_data_dir = os.path.abspath("selenium_data")
 		options.add_argument(f"user-data-dir={user_data_dir}")
@@ -90,10 +95,23 @@ class Scraper:
 		self.driver.refresh()
 
 	def run(self):
-		self.open_link("https://gomovies-online.cam/")
-		print("Press any key to continue...")
-		os.system("read -n1 -r")
+		print(f"Completed init in {round(time.time()-self.begin_init_timestamp,2)}s.\n")
+		search_term = input("Enter a movie name to search for:\n> ")
+		self.open_link(f"https://gomovies-online.cam/search/{search_term}")
+		results = self.find_elements_by_xpath("//*[@class='item_hd']")
+		for result in results:
+			print(result.text)
 
+		wait_for_input()
+
+
+def wait_for_input():
+	print()
+	if OS == "Windows":  # Only works on Windows
+		os.system("pause")
+	else:                # Works for MacOS and Linux
+		print("Press any key to continue...", end="", flush=True)
+		os.system("read -n1 -r")
 
 def main():
 	scraper = Scraper()
