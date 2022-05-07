@@ -155,6 +155,16 @@ class Scraper:
 
 		return False
 
+	def resume_video(self):
+		self.driver.execute_script(
+			"videos = document.querySelectorAll('video'); for(video of videos) {video.play()}"
+		)
+
+	def pause_video(self):
+		self.driver.execute_script(
+			"videos = document.querySelectorAll('video'); for(video of videos) {video.pause()}"
+		)
+
 	def search_by_title(self, search_term):
 		self.open_link(f"https://gomovies-online.cam/search/{search_term}")
 
@@ -211,9 +221,7 @@ class Scraper:
 
 		return results_data
 
-	def run(self):
-		print(f"Completed init in {round(time.time()-self.begin_init_timestamp,2)}s.\n")
-
+	def debug(self):
 		while True:
 			search_term = input("Enter a movie name to search for:\n> ")
 
@@ -222,9 +230,66 @@ class Scraper:
 			results = self.search_by_title(search_term)
 			print(f"Completed search in {round(time.time()-begin_search_timestamp,2)}s,", end=" ")
 			print(f"found {len(results)} {'result' if len(results) == 1 else 'results'}.\n")
-			print(pretty_print_json(results))
+			# print(pretty_print_json(results))
 
 			wait_for_input()
+
+	def download_from_link(self, link, timeout=30):
+		self.open_link(link)
+		movie = bool(
+			self.find_element_by_xpath(
+				"/html/body/main/div/div/section/section/ul/li[2]/div/a"
+			).text == "MOVIES"
+		)
+		current_page_url = self.current_url()
+		if movie:
+			print("Media is detected as 'MOVIE'.")
+
+			print("Waiting for video to load...")
+			current_page_url += "-online-for-free.html"
+			self.open_link(current_page_url)
+
+			original_video_url = self.wait_until_element(
+				By.TAG_NAME, "video", timeout
+			).get_attribute("src")
+			print("Video element loaded.")
+			print("Resuming content...")
+			self.wait_until_element_by_xpath(
+				"//*[@id='_skqeqEJBSrS']/div[10]/div[4]/div[2]/div[1]",
+				timeout,
+			).click()
+
+			# best_premium_quality = self.wait_until_element_by_xpath(
+			# 	"//*[@class='changeClassLabel jw-reset jw-settings-content-item']",
+			# 	timeout,
+			# ).text#.split("p (Premium)")[0]
+			# self.wait_until_element_by_xpath("//*[@class='sadhjasdjkASDd']")  # waits for video to load
+			# time.sleep(3)
+			best_premium_quality = self.find_element_by_xpath(
+				"//*[@id='_skqeqEJBSrS']/div[10]/div[3]/div[4]/a[1]/button"
+			).text#.split("p (Premium)")[0]
+			print(best_premium_quality)
+
+			print("Pausing content...")
+			self.pause_video()
+		print(current_page_url)
+		print(original_video_url)
+		#https://gomovies-online.cam/watch-tv-show/batman-the-animated-series-season-1/5kIqZ6LH/yFmPceNC
+		#https://gomovies-online.cam/watch-tv-show/batman-the-animated-series-season-1/5kIqZ6LH/gDov772B/yFmPceNC-online-for-free.html
+
+		#https://gomovies-online.cam/watch-film/sonic-the-hedgehog-2/S8efDEgq/NjyHbCra
+		#https://gomovies-online.cam/watch-film/sonic-the-hedgehog-2/S8efDEgq/NjyHbCra-online-for-free.html
+
+	def run(self):
+		print(f"Completed init in {round(time.time()-self.begin_init_timestamp,2)}s.\n")
+		print("Waiting for URL...")
+		begin_download_timestamp = time.time()
+		self.download_from_link(
+			"https://gomovies-online.cam/watch-film/death-on-the-nile/TjWH9YzW/aToNTDyI"
+		)
+		print(f"Completed download in {round(time.time()-begin_download_timestamp,2)}s.\n")
+
+		wait_for_input()
 
 
 def wait_for_input():
