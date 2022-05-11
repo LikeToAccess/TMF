@@ -294,17 +294,23 @@ class Scraper(Find_Element, Wait_Until_Element):
 		print(f"\tVideo link converted to {best_quality}p.")
 		print(f"Completed video loading and conversion in {round(time.time()-get_video_url_timestamp,2)}s.")
 
+		# print(modified_video_url)
+		# print(original_video_url)
+
 		return modified_video_url, page_link
 
 	def run(self):
-		self.get_video_url_from_page_link(
-			self.get_first_page_link_from_search(
-				self.search_by_title(
-					"the batman",
-					top_result_only=True
+		while True:
+			url = self.get_video_url_from_page_link(
+				self.get_first_page_link_from_search(
+					self.search_by_title(
+						input("\nEnter movie title:\n> "),
+						top_result_only=True
+					)
 				)
 			)
-		)
+
+			print(url[0])
 
 		wait_for_input()
 
