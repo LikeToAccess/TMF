@@ -115,8 +115,27 @@ class Find_Element:
 	def find_elements_by_xpath(self, sequence):
 		return self.find_elements(By.XPATH, sequence)
 
+class Find_Captcha(Find_Element, Wait_Until_Element):
+	def check_captcha(self):
+		# "Myles" - Myles
+		# "Liam" - Liam
+		try:
+			captcha_image = self.wait_until_element(
+				By.XPATH,
+				"//*[@id=\"checkcapchamodelyii-captcha-image\"]",
+				timeout=1.5
+			)
+			captcha_input = self.driver.find_element(By.XPATH, "//*[@id=\"checkcapchamodelyii-captcha\"]")
+			captcha_submit = self.driver.find_element(By.XPATH, "//*[@id=\"player-captcha\"]/div[3]/div/div")
+		except TimeoutException:
+			return None, None, None
+		if captcha_image:
+			print("WARNING: Found captcha!")
 
-class Scraper(Find_Element, Wait_Until_Element):
+		return captcha_image, captcha_input, captcha_submit
+
+
+class Scraper(Find_Element, Find_Captcha, Wait_Until_Element):
 	def __init__(self):
 		init_timestamp = time.time()
 		options = Options()
