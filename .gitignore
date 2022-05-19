@@ -8,6 +8,7 @@ __pycache__/
 
 selenium_data/
 .DS_Store
+captcha.png
 
 # Distribution / packaging
 .Python

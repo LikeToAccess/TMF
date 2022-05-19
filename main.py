@@ -117,6 +117,17 @@ class Find_Element:
 	def find_elements_by_xpath(self, sequence):
 		return self.find_elements(By.XPATH, sequence)
 
+	def find_element_by_xpaths(self, *xpaths):
+		for xpath in xpaths:
+			try:
+				data = self.find_element_by_xpath(xpath)
+			except NoSuchElementException:
+				continue
+			if data:
+				return data
+
+		return False
+
 class Find_Captcha(Find_Element, Wait_Until_Element):
 	def check_captcha(self):
 		# "Myles" - Myles
@@ -131,10 +142,25 @@ class Find_Captcha(Find_Element, Wait_Until_Element):
 			captcha_submit = self.driver.find_element(By.XPATH, "//*[@id=\"player-captcha\"]/div[3]/div/div")
 		except TimeoutException:
 			return False
-		if captcha_image:
-			print("WARNING: Found captcha!")
 
 		return captcha_image, captcha_input, captcha_submit
+
+	def resolve_captchas(self):
+		captcha = self.check_captcha()
+		while captcha:
+			captcha_image, captcha_input, captcha_submit = captcha
+			print("\tWARNING: Found captcha!")
+			try:
+				captcha_image.screenshot("captcha.png")
+				captcha_input.send_keys(input("\t\tSolve Captcha:\n\t\t> "))
+				captcha_submit.click()
+			except WebDriverException:
+				break
+
+			self.wait_until_element(
+				By.TAG_NAME, "video", timeout=3
+			).get_attribute("src")
+			captcha = self.check_captcha()
 
 
 class Scraper(Find_Captcha):
@@ -186,7 +212,6 @@ class Scraper(Find_Captcha):
 
 	def resume_video(self):
 		self.driver.execute_script(
-			# "videos = document.querySelectorAll('video'); for (video of videos) {video.setAttribute('muted'); video.play()}"
 			"for(v of document.querySelectorAll('video')){v.setAttribute('muted','');v.play()}"
 		)
 
@@ -196,7 +221,7 @@ class Scraper(Find_Captcha):
 		)
 
 	def get_first_page_link_from_search(self, search_results):
-		return search_results[0]["url"]
+		return search_results[0]["url"] if not isinstance(search_results, int) else search_results
 
 	def find_subtitles_source(self):
 		sequence = "/html/body/main/div/div/section/div[5]/div/script[2]"
@@ -206,8 +231,12 @@ class Scraper(Find_Captcha):
 		)
 		keys = ["src", "lang"]
 		values = [jmespath.search(f"[*].{key}", subtitle_data) for key in keys]
-		# values = jmespath.search("[*].src", subtitle_data), jmespath.search("[*].lang", subtitle_data)
-		subtitles = list(zip(values))
+		values = list(zip(values[1],values[0]))
+
+		subtitles = []
+		for value in values:
+			if value[0] == "en":
+				subtitles.append({"lang":value[0], "src":value[1]})
 
 		return subtitles
 
@@ -218,14 +247,23 @@ class Scraper(Find_Captcha):
 
 		if self.current_page_is_404():
 			print("\tERROR: Page error 404!")
-			return self.search_by_title(search_term)
+			return 404
 
-		results_data = []
-		results = self.find_elements_by_xpath("//*[@class='item_hd']") + \
-				  self.find_elements_by_xpath("//*[@class='item_sd']") + \
-				  self.find_elements_by_xpath("//*[@class='item_cam']") + \
-				  self.find_elements_by_xpath("//*[@class='item_series']") \
-				  if top_result_only < 1 else [self.find_element_by_xpath("//*[@class='item_hd']")]
+		try:
+			results_data = []
+			results = self.find_elements_by_xpath("//*[@class='item_hd']") + \
+					  self.find_elements_by_xpath("//*[@class='item_sd']") + \
+					  self.find_elements_by_xpath("//*[@class='item_cam']") + \
+					  self.find_elements_by_xpath("//*[@class='item_series']") \
+					  if top_result_only < 1 else [
+					  	  self.find_element_by_xpaths(
+					  	  	  "//*[@class='item_hd']",
+					  	  	  "//*[@class='item_sd']",
+					  	  	  "//*[@class='item_cam']",
+					  	  	  "//*[@class='item_series']",
+					  	  )]
+		except NoSuchElementException:
+			return 404
 
 		for result in results:
 			# Title
@@ -261,7 +299,7 @@ class Scraper(Find_Captcha):
 					"title":           title,
 					"poster_url":      poster_url,
 					"url":             url,
-					"search_data": search_data,
+					"search_data":     search_data,
 				}
 			)
 
@@ -276,6 +314,8 @@ class Scraper(Find_Captcha):
 		return results_data
 
 	def get_video_url_from_page_link(self, page_link, timeout=30):
+		if page_link == 404:
+			return 404
 		print("Waiting for page to load...")
 		get_video_url_timestamp = time.time()
 		self.open_link(page_link)
@@ -283,7 +323,7 @@ class Scraper(Find_Captcha):
 
 		if self.current_page_is_404():
 			print("\tERROR: Page error 404!")
-			return self.get_video_url_from_page_link(page_link, timeout=timeout)
+			return 404
 
 		movie = bool(
 			self.find_element_by_xpath(
@@ -299,9 +339,7 @@ class Scraper(Find_Captcha):
 			current_page_url += page_extension if not current_page_url.endswith(page_extension) else ""
 			self.open_link(current_page_url)
 			print("\tChecking for captchas...")
-			captcha = self.check_captcha()
-			if captcha:
-				captcha_image, captcha_input, captcha_submit = captcha
+			self.resolve_captchas()
 
 			original_video_url = self.wait_until_element(
 				By.TAG_NAME, "video", timeout=60
@@ -333,18 +371,17 @@ class Scraper(Find_Captcha):
 
 		print("\tWaiting for subtitles...")
 		subtitles = self.find_subtitles_source()
-		print("\tFound subtitles.")
-		print(subtitles)
+		if subtitles:
+			print(f"\tFound {len(subtitles)} English {'subtitle' if len(subtitles) == 1 else 'subtitles'}.")
+		else:
+			print("\tNo English subtitles available.")
 
 		modified_video_url = original_video_url \
 			.replace("/360?name=", f"/{best_quality}?name=") \
 			.replace("_360&token=ip=", f"_{best_quality}&token=ip=")
 
 		print(f"\tVideo link converted to {best_quality}p.")
-		print(f"Completed video loading and conversion in {round(time.time()-get_video_url_timestamp,2)}s.")
-
-		# print(modified_video_url)
-		# print(original_video_url)
+		print(f"Completed all scraping in {round(time.time()-get_video_url_timestamp,2)}s.")
 
 		return modified_video_url, page_link
 
@@ -358,6 +395,10 @@ class Scraper(Find_Captcha):
 					)
 				)
 			)
+
+			if url == 404:
+				print("ERROR: Page error 404!")
+				continue
 
 			print(url[0])
 
