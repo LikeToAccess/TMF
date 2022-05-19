@@ -11,9 +11,11 @@
 # py version        : 3.10.2 (must run on 3.6 or higher)
 #==============================================================================
 import os
+import ast
 import time
 import json
 import platform
+import jmespath
 from selenium import webdriver
 from selenium.common.exceptions import *
 from selenium.webdriver.common.by import By
@@ -128,14 +130,14 @@ class Find_Captcha(Find_Element, Wait_Until_Element):
 			captcha_input = self.driver.find_element(By.XPATH, "//*[@id=\"checkcapchamodelyii-captcha\"]")
 			captcha_submit = self.driver.find_element(By.XPATH, "//*[@id=\"player-captcha\"]/div[3]/div/div")
 		except TimeoutException:
-			return None, None, None
+			return False
 		if captcha_image:
 			print("WARNING: Found captcha!")
 
 		return captcha_image, captcha_input, captcha_submit
 
 
-class Scraper(Find_Element, Find_Captcha, Wait_Until_Element):
+class Scraper(Find_Captcha):
 	def __init__(self):
 		init_timestamp = time.time()
 		options = Options()
@@ -162,13 +164,6 @@ class Scraper(Find_Element, Find_Captcha, Wait_Until_Element):
 	def refresh(self):
 		self.driver.refresh()
 
-	def find_subtitles_source(self):
-		sequence = "/html/body/main/div/div/section/div[3]/div/script[2]/text()"
-		element = self.find_element_by_xpath(sequence)
-		print(element.text)
-		# source = element.get_attribute("src")
-		#/html/body/main/div/div/section/div[3]/div/script[2]/text()
-
 	def find_video_source(self):
 		pass
 		#//*[@id="_skqeqEJBSrS"]/div[2]/video
@@ -176,6 +171,13 @@ class Scraper(Find_Element, Find_Captcha, Wait_Until_Element):
 	def current_page_is_404(self):
 		try:
 			if self.find_element_by_xpath("//*[@id='_sKnoHaKJFse']/div[1]/h1/p[1]").text == "404":
+				return True
+		except NoSuchElementException:
+			pass
+
+		try:
+			if self.find_element_by_xpath('//*[@id="oppsBlock"]/span') \
+			.get_attribute("innerHTML").strip() == "Oh!":
 				return True
 		except NoSuchElementException:
 			pass
@@ -195,6 +197,19 @@ class Scraper(Find_Element, Find_Captcha, Wait_Until_Element):
 
 	def get_first_page_link_from_search(self, search_results):
 		return search_results[0]["url"]
+
+	def find_subtitles_source(self):
+		sequence = "/html/body/main/div/div/section/div[5]/div/script[2]"
+		element = self.wait_until_element_by_xpath(sequence)
+		subtitle_data = ast.literal_eval(
+			element.get_attribute("innerHTML").rsplit("window.subtitles = ", 1)[1]
+		)
+		keys = ["src", "lang"]
+		values = [jmespath.search(f"[*].{key}", subtitle_data) for key in keys]
+		# values = jmespath.search("[*].src", subtitle_data), jmespath.search("[*].lang", subtitle_data)
+		subtitles = list(zip(values))
+
+		return subtitles
 
 	def search_by_title(self, search_term, top_result_only=False):
 		print("Waiting for search results...")
@@ -261,10 +276,14 @@ class Scraper(Find_Element, Find_Captcha, Wait_Until_Element):
 		return results_data
 
 	def get_video_url_from_page_link(self, page_link, timeout=30):
-		print("Waiting for video to load...")
+		print("Waiting for page to load...")
 		get_video_url_timestamp = time.time()
 		self.open_link(page_link)
 		current_page_url = self.current_url()
+
+		if self.current_page_is_404():
+			print("\tERROR: Page error 404!")
+			return self.get_video_url_from_page_link(page_link, timeout=timeout)
 
 		movie = bool(
 			self.find_element_by_xpath(
@@ -275,24 +294,31 @@ class Scraper(Find_Element, Find_Captcha, Wait_Until_Element):
 		if movie:
 			print("\tMedia is detected as 'MOVIE'.")
 
-			print("\tWaiting for video to load...")
+			print("\tWaiting for video to load... (up to 60 seconds)")
 			page_extension = "-online-for-free.html"
 			current_page_url += page_extension if not current_page_url.endswith(page_extension) else ""
 			self.open_link(current_page_url)
+			print("\tChecking for captchas...")
+			captcha = self.check_captcha()
+			if captcha:
+				captcha_image, captcha_input, captcha_submit = captcha
 
 			original_video_url = self.wait_until_element(
-				By.TAG_NAME, "video", timeout
+				By.TAG_NAME, "video", timeout=60
 			).get_attribute("src")
 			print("\tVideo loaded.")
 
+			print("\tSleeping...")
 			time.sleep(0.5)
 			# TODO: Instead of sleeping, this time could be used to get meta data about the movie
 
 			try:
+				print("\tWaiting for video resolution list...")
 				best_quality = self.wait_until_element_by_xpath(
 					"//*[@class='changeClassLabel jw-reset jw-settings-content-item']",
 					timeout
 				).get_attribute("innerHTML").split("p (")[0]
+				print("\tVideo resolution list found.")
 			except TimeoutException:
 				# TODO: Fallback to old way of verifying resolutions if the above way fails.
 				print("\tWARNING: Could not find a resoltion higher than 360p!")
@@ -305,6 +331,10 @@ class Scraper(Find_Element, Find_Captcha, Wait_Until_Element):
 			print("\tWaiting for season page to load...")
 			self.open_link(current_page_url)
 
+		print("\tWaiting for subtitles...")
+		subtitles = self.find_subtitles_source()
+		print("\tFound subtitles.")
+		print(subtitles)
 
 		modified_video_url = original_video_url \
 			.replace("/360?name=", f"/{best_quality}?name=") \
