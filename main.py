@@ -13,7 +13,6 @@
 import os
 import ast
 import time
-import json
 import platform
 import jmespath
 from selenium import webdriver
@@ -21,146 +20,13 @@ from selenium.common.exceptions import *
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
-# from tqdm import tqdm
+from file import *
 from settings import *
+from find_captcha import Find_Captcha
 
 
 OS = platform.system()
-
-
-def remove_file(filename):
-	try:
-		os.remove(filename)
-		return True
-	except OSError:
-		return False
-
-def read_file(filename, encoding="utf8"):
-	if not os.path.exists(filename): return filename
-	with open(filename, "r", encoding=encoding) as file:
-		data = file.read()
-
-	return data
-
-def write_file(filename, data, encoding="utf8"):
-	with open(filename, "w", encoding=encoding) as file:
-		file.write(data)
-
-def read_json_file(filename, encoding="utf8"):
-	if not os.path.exists(filename): return []
-	with open(filename, "r", encoding=encoding) as file:
-		data = json.load(file)
-
-	return data
-
-
-def write_json_file(filename, data, encoding="utf8"):
-	with open(filename, "w", encoding=encoding) as file:
-		json.dump(data, file, indent=4, sort_keys=True)
-
-	return json.dumps(data, indent=4, sort_keys=True)
-
-def append_json_file(filename, data, encoding="utf8"):
-	existing_data = read_json_file(filename, encoding=encoding)
-	existing_data.append(data)
-	write_json_file(filename, existing_data, encoding=encoding)
-
-
-class Wait_Until_Element:
-	def __init__(self, driver):
-		self.driver = driver
-
-	def wait_until_element(self, selector, locator, timeout=10):
-		wait = WebDriverWait(self.driver, timeout)
-		element = wait.until(
-			EC.presence_of_element_located(
-				(
-					selector, locator
-				)
-			)
-		)
-		return element
-
-	def wait_until_elements(self, selector, locator, timeout=10):
-		wait = WebDriverWait(self.driver, timeout)
-		elements = wait.until(
-			EC.presence_of_all_elements_located(
-				(
-					selector, locator
-				)
-			)
-		)
-		return elements
-
-	def wait_until_element_by_xpath(self, sequence, timeout=10):
-		return self.wait_until_element(By.XPATH, sequence, timeout=timeout)
-
-	def wait_until_elements_by_xpath(self, sequence, timeout=10):
-		return self.wait_until_elements(By.XPATH, sequence, timeout=timeout)
-
-class Find_Element:
-	def __init__(self, driver):
-		self.driver = driver
-
-	def find_element(self, selector, sequence):
-		return self.driver.find_element(selector, sequence)
-
-	def find_elements(self, selector, sequence):
-		return self.driver.find_elements(selector, sequence)
-
-	def find_element_by_xpath(self, sequence):
-		return self.find_element(By.XPATH, sequence)
-
-	def find_elements_by_xpath(self, sequence):
-		return self.find_elements(By.XPATH, sequence)
-
-	def find_element_by_xpaths(self, *xpaths):
-		for xpath in xpaths:
-			try:
-				data = self.find_element_by_xpath(xpath)
-			except NoSuchElementException:
-				continue
-			if data:
-				return data
-
-		return False
-
-class Find_Captcha(Find_Element, Wait_Until_Element):
-	def check_captcha(self):
-		# "Myles" - Myles
-		# "Liam" - Liam
-		try:
-			captcha_image = self.wait_until_element(
-				By.XPATH,
-				"//*[@id=\"checkcapchamodelyii-captcha-image\"]",
-				timeout=1.5
-			)
-			captcha_input = self.driver.find_element(By.XPATH, "//*[@id=\"checkcapchamodelyii-captcha\"]")
-			captcha_submit = self.driver.find_element(By.XPATH, "//*[@id=\"player-captcha\"]/div[3]/div/div")
-		except TimeoutException:
-			return False
-
-		return captcha_image, captcha_input, captcha_submit
-
-	def resolve_captchas(self):
-		captcha = self.check_captcha()
-		while captcha:
-			captcha_image, captcha_input, captcha_submit = captcha
-			print("\tWARNING: Found captcha!")
-			try:
-				captcha_image.screenshot("captcha.png")
-				captcha_input.send_keys(input("\t\tSolve Captcha:\n\t\t> "))
-				captcha_submit.click()
-			except WebDriverException:
-				break
-
-			self.wait_until_element(
-				By.TAG_NAME, "video", timeout=3
-			).get_attribute("src")
-			captcha = self.check_captcha()
 
 
 class Scraper(Find_Captcha):
