@@ -87,6 +87,7 @@ class Scraper(Find_Captcha):
 		)
 
 	def get_first_page_link_from_search(self, search_results):
+		print(search_results)
 		return search_results[0]["url"] if not isinstance(search_results, int) else search_results
 
 	def find_subtitles_source(self):
@@ -106,7 +107,90 @@ class Scraper(Find_Captcha):
 
 		return subtitles
 
-	def search_by_title(self, search_term, top_result_only=False):
+	def find_data_from_url(self, url):
+		print("Adding media via direct link...")
+		movie = bool(
+			self.find_element_by_xpath(
+				"/html/body/main/div/div/section/section/ul/li[2]/div/a"
+			).text == "MOVIES"
+		)
+
+		if movie:
+			url += "-online-for-free.html" if not url.endswith("-online-for-free.html") else ""
+
+		_data_element = self.find_element_by_xpath("//*[@class='_sxfctqTgvOf _sYsfmtEcNNg']")
+		# /html/body/main/div/div/section/div[5]/div/box/div/div/div/div[3]/div[4]
+		# /html/body/main/div/div/section/div[5]/div/box/div/div/div/div[3]/div[4]/div[2]/div[1]/div[1]/h1
+		# /html/body/main/div/div/section/div[5]/div/box/div/div/div/div[3]/div[4]/div[2]/div[2]/div[2]/div/div[1]/span[2]/a
+		# /html/body/main/div/div/section/div[5]/div/box/div/div/div/div[3]/div[4]/div[2]/div[2]/div[2]/div/div[2]/span[2]/span
+		# /html/body/main/div/div/section/div[5]/div/box/div/div/div/div[3]/div[4]/div[2]/div[2]/div[2]/div/div[4]/span[2]
+		# /html/body/main/div/div/section/div[5]/div/box/div/div/div/div[3]/div[4]/div[2]/div[2]/div[1]/div[4]/span/a
+		# /html/body/main/div/div/section/div[5]/div/box/div/div/div/div[3]/div[4]/div[2]/div[2]/div[1]/div[2]/span
+		# /html/body/main/div/div/section/div[5]/div/box/div/div/div/div[3]/div[4]/div[2]/div[1]/div[2]/span[2]
+		# /html/body/main/div/div/section/div[5]/div/box/div/div/div/div[3]/div[4]/div[2]/div[1]/div[1]/div[1]/fieldset
+		# /html/body/main/div/div/section/div[5]/div/box/div/div/div/div[3]/div[4]/div[2]/div[2]/div[2]/div/div[3]/span[2]
+
+		title = _data_element.find_element(By.XPATH, value="div[2]/div[1]/div[1]/h1").text
+		# /html/body/main/div/div/section/div[3]/div/box/div/div/div/div[3]/div[4]/div[2]/div[1]/div[1]/h1
+
+		poster_url = _data_element.find_element(By.XPATH, value="div[1]/div[1]/img").get_attribute("src")
+		# /html/body/main/div/div/section/div[3]/div/box/div/div/div/div[3]/div[4]/div[1]/div[1]/img
+
+		data = {
+			"title":               _data_element.find_element(By.XPATH, value="div[2]/div[1]/div[1]/h1"),
+			"release_year":        _data_element.find_element(By.XPATH, value="div[2]/div[2]/div[2]/div/div[1]/span[2]/a"),
+			"imdb_score":          _data_element.find_element(By.XPATH, value="div[2]/div[2]/div[2]/div/div[2]/span[2]/span"),
+			"duration":            _data_element.find_element(By.XPATH, value="div[2]/div[2]/div[2]/div/div[4]/span[2]"),
+			"release_country":     _data_element.find_element(By.XPATH, value="div[2]/div[2]/div[1]/div[4]/span/a"),
+			"genre":               _data_element.find_element(By.XPATH, value="div[2]/div[2]/div[1]/div[2]/span"),
+			"description_preview": _data_element.find_element(By.XPATH, value="div[2]/div[1]/div[2]/span[2]"),  # Limit is 151 characters
+			"quality_tag":         _data_element.find_element(By.XPATH, value="div[2]/div[2]/div[2]/div/div[3]/span[2]"),
+			"user_rating":         _data_element.find_element(By.XPATH, value="div[2]/div[1]/div[1]/div[1]/fieldset"),
+			"key":                 "0",
+		}
+
+		data["title"] = data["title"].text
+		data["release_year"] = data["release_year"].text
+		data["imdb_score"] = data["imdb_score"].text
+		data["duration"] = data["duration"].text
+		data["release_country"] = data["release_country"].text
+		data["user_rating"] = data["user_rating"].get_attribute("data-rating")
+		data["description_preview"] = data["description_preview"].text.strip(". ").rsplit(" ", 1)[0].strip(".") + "..."
+		data["genre"] = data["genre"].text.replace("Genre:", "").strip()
+		data["quality_tag"] = data["quality_tag"].get_attribute("class").split()[1]
+		if data["quality_tag"] == "_swRnbEfUMBJ":
+			data["quality_tag"] = "HD"
+		elif data["quality_tag"] == "_sNhWjzrWjwZ":
+			data["quality_tag"] == "SD"
+		elif data["quality_tag"] == "_sfqZXxzgiEC":
+			data["quality_tag"] = "CAM"
+
+		if title != data["title"]:
+			print("\tWARNING: Titles do not match!")
+			print(f"\t\tGot:      '{data['title']}'")
+			print(f"\t\tExpected: '{title}'")
+
+		data = {
+			"title":      title,
+			"poster_url": poster_url,
+			"url":        url,
+			"data":       data,
+		}
+
+		return [data]
+
+	def search(self, search_term, top_result_only=False):
+		# https://gomovies-online.cam/watch-tv-show/mr-robot-season-4/cYqlqU9U/t5f85jpg/h2586jt3-online-for-free.html
+		if search_term.startswith("https://"):
+			url = search_term
+			if not url.endswith("-online-for-free.html"):
+				print("WARNING: 'search_term' should be a direct link to video page!")
+				print(f"\tGot: '{search_term}'")
+				return 404
+
+			self.open_link(url)
+			return self.find_data_from_url(url)
+
 		print("Waiting for search results...")
 		search_timestamp = time.time()
 		self.open_link(f"https://gomovies-online.cam/search/{search_term}")
@@ -116,7 +200,6 @@ class Scraper(Find_Captcha):
 			return 404
 
 		try:
-			results_data = []
 			results = self.find_elements_by_xpath("//*[@class='item_hd']") + \
 					  self.find_elements_by_xpath("//*[@class='item_sd']") + \
 					  self.find_elements_by_xpath("//*[@class='item_cam']") + \
@@ -127,11 +210,14 @@ class Scraper(Find_Captcha):
 					  	  	  "//*[@class='item_sd']",
 					  	  	  "//*[@class='item_cam']",
 					  	  	  "//*[@class='item_series']",
-					  	  )]
+					  	  )
+					  ]
 		except NoSuchElementException:
 			return 404
 
+		results_data = []
 		for result in results:
+			if not result: return 404
 			# Title
 			title = result.text
 			# Poster
@@ -149,7 +235,6 @@ class Scraper(Find_Captcha):
 				"release_country":     _data_element.get_attribute("data-country"),
 				"genre":               _data_element.get_attribute("data-genre"),
 				"description_preview": _data_element.get_attribute("data-descript"),  # Limit is 151 characters
-				"star_prefix":         _data_element.get_attribute("data-star_prefix"),
 				"key":                 _data_element.get_attribute("data-key"),
 				"quality_tag":         _data_element.get_attribute("data-quality"),
 				"user_rating":         _data_element.get_attribute("data-rating"),
@@ -162,10 +247,10 @@ class Scraper(Find_Captcha):
 
 			results_data.append(
 				{
-					"title":           title,
-					"poster_url":      poster_url,
-					"url":             url,
-					"search_data":     search_data,
+					"title":      title,
+					"poster_url": poster_url,
+					"url":        url,
+					"data":       search_data,
 				}
 			)
 
@@ -179,9 +264,42 @@ class Scraper(Find_Captcha):
 
 		return results_data
 
+	def convert_data_from_page_link(self, current_page_url, timeout=30):
+		print("\tWaiting for video to load... (up to 60 seconds)")
+		page_extension = "-online-for-free.html"
+		current_page_url += page_extension if not current_page_url.endswith(page_extension) else ""
+		self.open_link(current_page_url)
+		print("\tChecking for captchas...")
+		self.resolve_captchas()
+
+		original_video_url = self.wait_until_element(
+			By.TAG_NAME, "video", timeout=60
+		).get_attribute("src")
+		print("\tVideo loaded.")
+
+		print("\tSleeping...")
+		time.sleep(0.5)
+		# TODO: Instead of sleeping, this time could be used to get meta data about the movie
+
+		try:
+			print("\tWaiting for video resolution list...")
+			best_quality = self.wait_until_element_by_xpath(
+				"//*[@class='changeClassLabel jw-reset jw-settings-content-item']",
+				timeout
+			).get_attribute("innerHTML").split("p (")[0]
+			print("\tVideo resolution list found.")
+		except TimeoutException:
+			# TODO: Fallback to old way of verifying resolutions if the above way fails.
+			print("\tWARNING: Could not find a resoltion higher than 360p!")
+			best_quality = "360"
+
+		self.pause_video()
+		print("\tVideo paused.")
+
+		return original_video_url, best_quality
+
 	def get_video_url_from_page_link(self, page_link, timeout=30):
-		if page_link == 404:
-			return 404
+		if page_link == 404: return page_link
 		print("Waiting for page to load...")
 		get_video_url_timestamp = time.time()
 		self.open_link(page_link)
@@ -199,41 +317,15 @@ class Scraper(Find_Captcha):
 
 		if movie:
 			print("\tMedia is detected as 'MOVIE'.")
-
-			print("\tWaiting for video to load... (up to 60 seconds)")
-			page_extension = "-online-for-free.html"
-			current_page_url += page_extension if not current_page_url.endswith(page_extension) else ""
-			self.open_link(current_page_url)
-			print("\tChecking for captchas...")
-			self.resolve_captchas()
-
-			original_video_url = self.wait_until_element(
-				By.TAG_NAME, "video", timeout=60
-			).get_attribute("src")
-			print("\tVideo loaded.")
-
-			print("\tSleeping...")
-			time.sleep(0.5)
-			# TODO: Instead of sleeping, this time could be used to get meta data about the movie
-
-			try:
-				print("\tWaiting for video resolution list...")
-				best_quality = self.wait_until_element_by_xpath(
-					"//*[@class='changeClassLabel jw-reset jw-settings-content-item']",
-					timeout
-				).get_attribute("innerHTML").split("p (")[0]
-				print("\tVideo resolution list found.")
-			except TimeoutException:
-				# TODO: Fallback to old way of verifying resolutions if the above way fails.
-				print("\tWARNING: Could not find a resoltion higher than 360p!")
-				best_quality = "360"
-
-			self.pause_video()
-			print("\tVideo paused.")
+			video_url, best_quality = self.convert_data_from_page_link(current_page_url, timeout=timeout)
 		else:
-			print("\tMedia is detected as 'TV SHOW'.")
-			print("\tWaiting for season page to load...")
-			self.open_link(current_page_url)
+			if current_page_url.endswith("-online-for-free.html"):
+				print("\tMedia is detected as 'TV SHOW Episode'.")
+				video_url, best_quality = self.convert_data_from_page_link(current_page_url, timeout=timeout)
+			else:
+				print("\tMedia is detected as 'TV SHOW Season'.")
+				print("\tWaiting for season page to load...")
+				self.open_link(current_page_url)
 
 		print("\tWaiting for subtitles...")
 		subtitles = self.find_subtitles_source()
@@ -242,7 +334,7 @@ class Scraper(Find_Captcha):
 		else:
 			print("\tNo English subtitles available.")
 
-		modified_video_url = original_video_url \
+		modified_video_url = video_url \
 			.replace("/360?name=", f"/{best_quality}?name=") \
 			.replace("_360&token=ip=", f"_{best_quality}&token=ip=")
 
@@ -255,7 +347,7 @@ class Scraper(Find_Captcha):
 		while True:
 			url = self.get_video_url_from_page_link(
 				self.get_first_page_link_from_search(
-					self.search_by_title(
+					self.search(
 						input("\nEnter movie title:\n> "),
 						top_result_only=True
 					)
@@ -267,6 +359,7 @@ class Scraper(Find_Captcha):
 				continue
 
 			print(url[0])
+			# print(url)
 
 		wait_for_input()
 

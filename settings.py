@@ -15,4 +15,4 @@
 # Because of this, the "--disable-gpu" flag is also enabled when HEADLESS is
 # set to True.
 # The default value is True.
-HEADLESS = False
+HEADLESS = True
