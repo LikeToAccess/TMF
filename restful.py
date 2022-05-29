@@ -27,14 +27,7 @@ class Users(Resource):
 		parser.add_argument("name", required=False, type=str, location="args")
 		args = parser.parse_args()
 		if args:
-			data = read_database_file("./data/users.db", "users", args)
-			if data:
-				print(f"Succesful 200 in GET request: {data}")
-				return {"data": data}, 200
-			print(f"Error 404 in GET request: {args['email']} does not exist")
-			return {"message": f"{args['email']} does not exist"}, 404
-		print("Error 409 in GET request: An email is required")
-		return {"message": "An email is required"}, 409
+			return {"message": "Movie link"}, 200
 
 	def post(self):
 		parser = reqparse.RequestParser()
@@ -43,27 +36,6 @@ class Users(Resource):
 		parser.add_argument("profile_picture", required=False, type=str, location="args")
 		args = parser.parse_args()
 
-
-		data = read_database_file("./data/users.db", "users", {"email": args["email"]})
-		if data:
-			print(f"Error 409 in POST request: {args['email']} already exists")
-			return {
-				"message": f"{args['email']} already exists"
-			}, 409
-
-		data = args["name"], args["email"], args["profile_picture"]
-
-		write_database_file(
-			"./data/users.db",
-			"users",
-			f"{(args['name'], args['email'], args['profile_picture'])}".replace("None", "NULL")
-		)
-
-		# return {
-		# 	"name":            args["name"],
-		# 	"email":           args["email"],
-		# 	"profile_picture": args["profile_picture"],
-		# }, 200
 		print("Succesful 200 in POST request: New user created")
 		return {"message": "New user created"}, 200
 
