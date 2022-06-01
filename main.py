@@ -27,6 +27,7 @@ from find_captcha import Find_Captcha
 
 
 OS = platform.system()
+page_extension = "-online-for-free.html"
 
 
 class Scraper(Find_Captcha):
@@ -184,9 +185,12 @@ class Scraper(Find_Captcha):
 		if search_term.startswith("https://"):
 			url = search_term
 			if not url.endswith("-online-for-free.html"):
-				print("WARNING: 'search_term' should be a direct link to video page!")
-				print(f"\tGot: '{search_term}'")
-				return 404
+				if "/watch-film/" in url and "/watch-tv-show/" not in url:
+					url += page_extension
+				else:
+					print("WARNING: 'search_term' should be a direct link to video page!")
+					print(f"\tGot: '{search_term}'")
+					return 404
 
 			self.open_link(url)
 			return self.find_data_from_url(url)
@@ -266,7 +270,6 @@ class Scraper(Find_Captcha):
 
 	def convert_data_from_page_link(self, current_page_url, timeout=30):
 		print("\tWaiting for video to load... (up to 60 seconds)")
-		page_extension = "-online-for-free.html"
 		current_page_url += page_extension if not current_page_url.endswith(page_extension) else ""
 		self.open_link(current_page_url)
 		print("\tChecking for captchas...")

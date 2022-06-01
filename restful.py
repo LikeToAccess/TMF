@@ -14,10 +14,12 @@
 from flask import Flask
 from flask_restful import Resource, Api, reqparse
 from waitress import serve
+from main import Scraper
 
 
 app = Flask(__name__)
 api = Api(app)
+scraper = Scraper()
 
 
 class Plex(Resource):
@@ -25,19 +27,38 @@ class Plex(Resource):
 		# Gets search results from a search term
 		parser = reqparse.RequestParser()
 		parser.add_argument("search_term", required=True, type=str, location="args")
-		# parser.add_argument("name", required=False, type=str, location="args")
 		args = parser.parse_args()
-		if args:
-			return {"message": f"Searching for Movie: '{args['search_term']}'"}, 200
-		return {"message": "Bad request"}, 400
+		if not args:
+			return {"message": "Bad request"}, 400
+
+		data = scraper.search(
+				args["search_term"]
+			)
+
+		if data == 404 or not data:
+			return {"message": "Page not found"}, 404
+		return {"message": data}, 200
 
 	def post(self):
 		# Adds media to the server
 		parser = reqparse.RequestParser()
-		parser.add_argument("data", required=True, type=str, location="args")
+		parser.add_argument("search_term", required=True, type=str, location="args")
 		args = parser.parse_args()
+		if not args:
+			return {"message": "Bad request"}, 400
 
-		return {"message": f"Movie added, '{args['data']}'"}, 200
+		url = scraper.get_video_url_from_page_link(
+				scraper.get_first_page_link_from_search(
+					scraper.search(
+						args["search_term"],
+						top_result_only=True
+					)
+				)
+			)
+
+		if url == 404:
+			return {"message": "Page not found"}, 404
+		return {"message": url}, 200
 
 class Sample(Resource):
 	def get(self):
