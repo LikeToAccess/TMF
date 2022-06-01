@@ -2,3 +2,4 @@ selenium
 tqdm
 webdriver_manager
 jmespath
+waitress
