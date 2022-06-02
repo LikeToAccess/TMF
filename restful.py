@@ -13,12 +13,14 @@
 # from contextlib import closing
 from flask import Flask
 from flask_restful import Resource, Api, reqparse
+from flask_cors import CORS
 from waitress import serve
 from main import Scraper
 
 
 app = Flask(__name__)
 api = Api(app)
+CORS(app, resources={r"*": {"origins": "*"}})
 scraper = Scraper()
 
 

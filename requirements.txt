@@ -3,3 +3,4 @@ tqdm
 webdriver_manager
 jmespath
 waitress
+flask-cors
