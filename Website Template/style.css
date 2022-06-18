@@ -1,0 +1,39 @@
+* {
+	box-sizing: border-box;
+}
+
+img.result {
+	width: 150px;
+	cursor: pointer;
+}
+
+body {
+	font-family: "Open Sans", sans-serif;
+	color: #444444;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	font-family: "Raleway", sans-serif;
+}
+
+.card {
+	float: left;
+	width: 33.33%;
+	padding: 50px;
+}
+
+.card-text {
+
+}
+
+.card-columns::after {
+	content: "";
+	clear: both;
+	display: table;
+}
+
+.center-content .container {
+	display: grid;
+    justify-content: center; /* Horizontal */
+    align-content: center; /* Vertical */
+}
