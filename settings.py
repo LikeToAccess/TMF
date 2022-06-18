@@ -16,3 +16,9 @@
 # set to True.
 # The default value is True.
 HEADLESS = True
+
+# Sets the IP/Domain Name and port to bind the API to, the API will only be
+# accessable from whatever this is set to.
+# The default value is "0.0.0.0" (for localhost) and 8080.
+HOST = "0.0.0.0"
+PORT = 8080

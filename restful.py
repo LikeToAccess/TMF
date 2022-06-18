@@ -16,6 +16,7 @@ from flask_restful import Resource, Api, reqparse
 from flask_cors import CORS
 from waitress import serve
 from main import Scraper
+from settings import *
 
 
 app = Flask(__name__)
@@ -74,7 +75,7 @@ def main():
 	# plexserver.ga:8080/sample
 	api.add_resource(Plex, "/plex")
 	api.add_resource(Sample, "/sample")
-	serve(app, host="0.0.0.0", port=8080)
+	serve(app, host=HOST, port=PORT)
 	# app.run()
 
 
