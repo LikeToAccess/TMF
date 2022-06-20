@@ -134,7 +134,7 @@ class Scraper(Find_Captcha):
 		title = _data_element.find_element(By.XPATH, value="div[2]/div[1]/div[1]/h1").text
 		# /html/body/main/div/div/section/div[3]/div/box/div/div/div/div[3]/div[4]/div[2]/div[1]/div[1]/h1
 
-		poster_url = _data_element.find_element(By.XPATH, value="div[1]/div[1]/img").get_attribute("src")
+		poster_url = _data_element.find_element(By.XPATH, value="div[1]/div[1]/img")
 		# /html/body/main/div/div/section/div[3]/div/box/div/div/div/div[3]/div[4]/div[1]/div[1]/img
 
 		data = {
@@ -171,6 +171,13 @@ class Scraper(Find_Captcha):
 			print(f"\t\tGot:      '{data['title']}'")
 			print(f"\t\tExpected: '{title}'")
 
+		if poster_url.get_attribute("src").endswith("dist/image/default_poster.jpg"):
+			# print("DEBUG")
+			poster_url = poster_url.get_attribute("data-src")
+		else:
+			poster_url = poster_url.get_attribute("src")
+			# print(poster_url)
+
 		data = {
 			"title":      title,
 			"poster_url": poster_url,
@@ -193,6 +200,7 @@ class Scraper(Find_Captcha):
 					return 404
 
 			self.open_link(url)
+			# self.driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
 			return self.find_data_from_url(url)
 
 		print("Waiting for search results...")
@@ -225,7 +233,7 @@ class Scraper(Find_Captcha):
 			# Title
 			title = result.text
 			# Poster
-			poster_url = result.find_element(by=By.XPATH, value="div/div/img").get_attribute("src")
+			poster_url = result.find_element(by=By.XPATH, value="div/div/img")
 			# URL
 			url = result.get_attribute("href")
 			# Other Data
@@ -249,6 +257,18 @@ class Scraper(Find_Captcha):
 				search_data["quality_tag"].replace("itemAbsolute_", "").upper()
 			)
 
+			if title != search_data["title"]:
+				print("\tWARNING: Titles do not match!")
+				print(f"\t\tGot:      '{search_data['title']}'")
+				print(f"\t\tExpected: '{title}'")
+
+			if poster_url.get_attribute("src").endswith("dist/image/default_poster.jpg"):
+				# print("DEBUG")
+				poster_url = poster_url.get_attribute("data-src")
+			else:
+				poster_url = poster_url.get_attribute("src")
+				# print(poster_url)
+
 			results_data.append(
 				{
 					"title":      title,
@@ -257,11 +277,6 @@ class Scraper(Find_Captcha):
 					"data":       search_data,
 				}
 			)
-
-			if title != search_data["title"]:
-				print("\tWARNING: Titles do not match!")
-				print(f"\t\tGot:      '{search_data['title']}'")
-				print(f"\t\tExpected: '{title}'")
 
 		print(f"Completed search in {round(time.time()-search_timestamp,2)}s,", end=" ")
 		print(f"found {len(results_data)} {'result' if len(results_data) == 1 else 'results'}.")
