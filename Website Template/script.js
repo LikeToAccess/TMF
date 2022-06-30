@@ -66,8 +66,10 @@ function populateResults(results, columns=10000) {
 
 async function onItemClick(result) {
 	console.log("Sending POST request for "+ result.title);
+	// console.log(JSON.stringify(result));
 	search_term = result.url;
-	const response = await fetch("http://127.0.0.1:8081/plex?search_term="+ search_term, {
+	const response = await fetch(
+		"http://127.0.0.1:8081/plex?search_term="+ search_term +"&result_data="+ JSON.stringify(result), {
 		method: "POST"
 	});
 

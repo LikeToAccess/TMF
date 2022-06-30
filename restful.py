@@ -46,17 +46,13 @@ class Plex(Resource):
 		# Adds media to the server
 		parser = reqparse.RequestParser()
 		parser.add_argument("search_term", required=True, type=str, location="args")
+		parser.add_argument("result_data", required=False, type=str, location="args")
 		args = parser.parse_args()
 		if not args:
 			return {"message": "Bad request"}, 400
 
 		url = scraper.get_video_url_from_page_link(
-				scraper.get_first_page_link_from_search(
-					scraper.search(
-						args["search_term"],
-						top_result_only=True
-					)
-				)
+				args["search_term"]
 			)
 
 		if url == 404:
