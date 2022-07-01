@@ -27,10 +27,10 @@ function populateResults(results, columns=10000) {
 		rowElement = document.createElement("div");
 		rowElement.setAttribute("class", "row d-flex justify-content-center");
 		resultsElement.appendChild(rowElement);
-		console.log("New row!");
+		// console.log("New row!");
 
 		results.forEach(function(result) {
-			console.log("New clolumn!");
+			// console.log("New clolumn!");
 			cardElement = document.createElement("div");
 			// lineBreakElement = document.createElement("br");
 			resultYearElement = document.createElement("p");
