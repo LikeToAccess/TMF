@@ -27,10 +27,10 @@ function populateResults(results, columns=10000) {
 		rowElement = document.createElement("div");
 		rowElement.setAttribute("class", "row justify-content-center");
 		resultsElement.appendChild(rowElement);
-		console.log("New row!");
+		// console.log("New row!");
 
 		results.forEach(function(result) {
-			console.log("New clolumn!");
+			// console.log("New clolumn!");
 			cardElement = document.createElement("div");
 			// lineBreakElement = document.createElement("br");
 			resultYearElement = document.createElement("p");
@@ -78,8 +78,10 @@ async function onItemClick(result, id) {
 	spinnerContainer.appendChild(spinner);
 
 	console.log("Sending POST request for "+ result.title);
+	// console.log(JSON.stringify(result));
 	search_term = result.url;
-	const response = await fetch("http://127.0.0.1:8081/plex?search_term="+ search_term, {
+	const response = await fetch(
+		"http://127.0.0.1:8081/plex?search_term="+ search_term +"&result_data="+ JSON.stringify(result), {
 		method: "POST"
 	});
 

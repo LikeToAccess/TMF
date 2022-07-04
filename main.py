@@ -116,38 +116,40 @@ class Scraper(Find_Captcha):
 			).text == "MOVIES"
 		)
 
-		if movie:
-			url += "-online-for-free.html" if not url.endswith("-online-for-free.html") else ""
-
-		_data_element = self.find_element_by_xpath("//*[@class='_sxfctqTgvOf _sYsfmtEcNNg']")
-		# /html/body/main/div/div/section/div[5]/div/box/div/div/div/div[3]/div[4]
-		# /html/body/main/div/div/section/div[5]/div/box/div/div/div/div[3]/div[4]/div[2]/div[1]/div[1]/h1
-		# /html/body/main/div/div/section/div[5]/div/box/div/div/div/div[3]/div[4]/div[2]/div[2]/div[2]/div/div[1]/span[2]/a
-		# /html/body/main/div/div/section/div[5]/div/box/div/div/div/div[3]/div[4]/div[2]/div[2]/div[2]/div/div[2]/span[2]/span
-		# /html/body/main/div/div/section/div[5]/div/box/div/div/div/div[3]/div[4]/div[2]/div[2]/div[2]/div/div[4]/span[2]
-		# /html/body/main/div/div/section/div[5]/div/box/div/div/div/div[3]/div[4]/div[2]/div[2]/div[1]/div[4]/span/a
-		# /html/body/main/div/div/section/div[5]/div/box/div/div/div/div[3]/div[4]/div[2]/div[2]/div[1]/div[2]/span
-		# /html/body/main/div/div/section/div[5]/div/box/div/div/div/div[3]/div[4]/div[2]/div[1]/div[2]/span[2]
-		# /html/body/main/div/div/section/div[5]/div/box/div/div/div/div[3]/div[4]/div[2]/div[1]/div[1]/div[1]/fieldset
-		# /html/body/main/div/div/section/div[5]/div/box/div/div/div/div[3]/div[4]/div[2]/div[2]/div[2]/div/div[3]/span[2]
-
-		title = _data_element.find_element(By.XPATH, value="div[2]/div[1]/div[1]/h1").text
-		# /html/body/main/div/div/section/div[3]/div/box/div/div/div/div[3]/div[4]/div[2]/div[1]/div[1]/h1
-
-		poster_url = _data_element.find_element(By.XPATH, value="div[1]/div[1]/img")
-		# /html/body/main/div/div/section/div[3]/div/box/div/div/div/div[3]/div[4]/div[1]/div[1]/img
+		if movie: url += "-online-for-free.html" if not url.endswith("-online-for-free.html") else ""
+		base_element = self.find_element_by_xpath("//*[@class='_sxfctqTgvOf _sYsfmtEcNNg']")
+		title = base_element.find_element(By.XPATH, value="div[2]/div[1]/div[1]/h1").text
+		poster_url = base_element.find_element(By.XPATH, value="div[1]/div[1]/img")
 
 		data = {
-			"title":               _data_element.find_element(By.XPATH, value="div[2]/div[1]/div[1]/h1"),
-			"release_year":        _data_element.find_element(By.XPATH, value="div[2]/div[2]/div[2]/div/div[1]/span[2]/a"),
-			"imdb_score":          _data_element.find_element(By.XPATH, value="div[2]/div[2]/div[2]/div/div[2]/span[2]/span"),
-			"duration":            _data_element.find_element(By.XPATH, value="div[2]/div[2]/div[2]/div/div[4]/span[2]"),
-			"release_country":     _data_element.find_element(By.XPATH, value="div[2]/div[2]/div[1]/div[4]/span/a"),
-			"genre":               _data_element.find_element(By.XPATH, value="div[2]/div[2]/div[1]/div[2]/span"),
-			"description_preview": _data_element.find_element(By.XPATH, value="div[2]/div[1]/div[2]/span[2]"),  # Limit is 151 characters
-			"quality_tag":         _data_element.find_element(By.XPATH, value="div[2]/div[2]/div[2]/div/div[3]/span[2]"),
-			"user_rating":         _data_element.find_element(By.XPATH, value="div[2]/div[1]/div[1]/div[1]/fieldset"),
-			"key":                 "0",
+			"title": base_element.find_element(
+				By.XPATH, value="div[2]/div[1]/div[1]/h1"
+			),
+			"release_year": base_element.find_element(
+				By.XPATH, value="div[2]/div[2]/div[2]/div/div[1]/span[2]/a"
+			),
+			"imdb_score": base_element.find_element(
+				By.XPATH, value="div[2]/div[2]/div[2]/div/div[2]/span[2]/span"
+			),
+			"duration": base_element.find_element(
+				By.XPATH, value="div[2]/div[2]/div[2]/div/div[4]/span[2]"
+			),
+			"release_country": base_element.find_element(
+				By.XPATH, value="div[2]/div[2]/div[1]/div[4]/span/a"
+			),
+			"genre": base_element.find_element(
+				By.XPATH, value="div[2]/div[2]/div[1]/div[2]/span"
+			),
+			"description_preview": base_element.find_element(
+			By.XPATH, value="div[2]/div[1]/div[2]/span[2]"
+			),  # Limit is 151 characters
+			"quality_tag": base_element.find_element(
+				By.XPATH, value="div[2]/div[2]/div[2]/div/div[3]/span[2]"
+			),
+			"user_rating": base_element.find_element(
+				By.XPATH, value="div[2]/div[1]/div[1]/div[1]/fieldset"
+			),
+			"key": "0",
 		}
 
 		data["title"] = data["title"].text
@@ -156,27 +158,28 @@ class Scraper(Find_Captcha):
 		data["duration"] = data["duration"].text
 		data["release_country"] = data["release_country"].text
 		data["user_rating"] = data["user_rating"].get_attribute("data-rating")
-		data["description_preview"] = data["description_preview"].text.strip(". ").rsplit(" ", 1)[0].strip(".") + "..."
+		data["description_preview"] = data["description_preview"].text
 		data["genre"] = data["genre"].text.replace("Genre:", "").strip()
 		data["quality_tag"] = data["quality_tag"].get_attribute("class").split()[1]
+
 		if data["quality_tag"] == "_swRnbEfUMBJ":
 			data["quality_tag"] = "HD"
 		elif data["quality_tag"] == "_sNhWjzrWjwZ":
-			data["quality_tag"] == "SD"
+			data["quality_tag"] = "SD"
 		elif data["quality_tag"] == "_sfqZXxzgiEC":
 			data["quality_tag"] = "CAM"
-
 		if title != data["title"]:
 			print("\tWARNING: Titles do not match!")
 			print(f"\t\tGot:      '{data['title']}'")
 			print(f"\t\tExpected: '{title}'")
-
 		if poster_url.get_attribute("src").endswith("dist/image/default_poster.jpg"):
-			# print("DEBUG")
 			poster_url = poster_url.get_attribute("data-src")
 		else:
 			poster_url = poster_url.get_attribute("src")
-			# print(poster_url)
+		data["description_preview"] = data["description_preview"] \
+			.strip(". ")       \
+			.rsplit(" ", 1)[0] \
+			.strip(".") +"..." \
 
 		data = {
 			"title":      title,

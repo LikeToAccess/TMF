@@ -10,12 +10,12 @@
 # license           : MIT
 # py version        : 3.10.2 (must run on 3.6 or higher)
 #==============================================================================
-# from contextlib import closing
 from flask import Flask
 from flask_restful import Resource, Api, reqparse
 from flask_cors import CORS
 from waitress import serve
 from main import Scraper
+from download import Download
 from settings import *
 
 
@@ -23,6 +23,7 @@ app = Flask(__name__)
 api = Api(app)
 CORS(app, resources={r"*": {"origins": "*"}})
 scraper = Scraper()
+# download = Download()
 
 
 class Plex(Resource):
@@ -45,23 +46,22 @@ class Plex(Resource):
 	def post(self):
 		# Adds media to the server
 		parser = reqparse.RequestParser()
-		parser.add_argument("search_term", required=True, type=str, location="args")
+		parser.add_argument("search_term", required=True,  type=str, location="args")
+		parser.add_argument("result_data", required=False, type=str, location="args")
 		args = parser.parse_args()
 		if not args:
 			return {"message": "Bad request"}, 400
 
 		url = scraper.get_video_url_from_page_link(
-				scraper.get_first_page_link_from_search(
-					scraper.search(
-						args["search_term"],
-						top_result_only=True
-					)
-				)
+				args["search_term"]
 			)
+		data = args["result_data"]
 
 		if url == 404:
 			return {"message": "Page not found"}, 404
-		return {"message": url}, 200
+
+		Download(url, data).run()
+		return {"message": "Created", "url": url, "data": data}, 201
 
 class Sample(Resource):
 	def get(self):
@@ -72,7 +72,6 @@ class Sample(Resource):
 
 
 def main():
-	# plexserver.ga:8080/sample
 	api.add_resource(Plex, "/plex")
 	api.add_resource(Sample, "/sample")
 	serve(app, host=HOST, port=PORT)
