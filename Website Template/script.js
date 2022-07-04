@@ -27,12 +27,9 @@ function populateResults(results, columns=10000) {
 		rowElement = document.createElement("div");
 		rowElement.setAttribute("class", "row justify-content-center");
 		resultsElement.appendChild(rowElement);
-		// console.log("New row!");
 
 		results.forEach(function(result) {
-			// console.log("New clolumn!");
 			cardElement = document.createElement("div");
-			// lineBreakElement = document.createElement("br");
 			resultYearElement = document.createElement("p");
 			resultTitleElement = document.createElement("p");
 
@@ -43,7 +40,7 @@ function populateResults(results, columns=10000) {
 			resultPosterElement.setAttribute("id", result.data.key);
 			resultPosterElement.setAttribute("src", result.poster_url);
 			resultPosterElement.setAttribute("class", "result mx-auto d-block rounded");
-			resultPosterElement.setAttribute("onclick", "onItemClick("+ JSON.stringify(result, resultPosterElement.id) +");");
+			resultPosterElement.setAttribute("onclick", "onItemClick("+ JSON.stringify(result) +","+ resultPosterElement.id +");");
 
 			anchorElement = document.createElement("a");
 			anchorElement.setAttribute("id", "anchor");
@@ -69,12 +66,13 @@ async function onItemClick(result, id) {
 	// <div class="loadingio-spinner-chunk-csoy2lexd8c"><div class="ldio-3h5pe1h2r4v">
 	console.log(id);
 	spinnerContainer = document.createElement("div");
-	spinnerContainer.setAttribute("class", "loadingio-spinner-chunk-csoy2lexd8c");
-	spinner = document.createElement("div");
-	spinner.setAttribute("class", "ldio-3h5pe1h2r4v");
+	spinnerContainer.setAttribute("class", "spinner-container masked");
+	spinner = document.createElement("img");
+	spinner.setAttribute("src", "spinner.svg");
+	parentElement = document.getElementById(id).parentElement;
 
-	parentElement = document.getElementById(id);
 	parentElement.appendChild(spinnerContainer);
+	// spinnerContainer.appendChild(parentElement);
 	spinnerContainer.appendChild(spinner);
 
 	console.log("Sending POST request for "+ result.title);
@@ -87,7 +85,7 @@ async function onItemClick(result, id) {
 
 	const http_result = await response.json();
 	console.log(http_result);
-	alert(http_result.message[0]);
+	alert(http_result.message);
 	// window.open(http_result.message[0], "_blank");
 }
 
