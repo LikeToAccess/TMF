@@ -25,7 +25,7 @@ function populateResults(results, columns=10000) {
 
 	splitResults.forEach(function(results) {
 		rowElement = document.createElement("div");
-		rowElement.setAttribute("class", "row d-flex justify-content-center");
+		rowElement.setAttribute("class", "row justify-content-center");
 		resultsElement.appendChild(rowElement);
 		console.log("New row!");
 
@@ -36,13 +36,14 @@ function populateResults(results, columns=10000) {
 			resultYearElement = document.createElement("p");
 			resultTitleElement = document.createElement("p");
 
-			cardElement.setAttribute("class", "card col col-md-2");
+			cardElement.setAttribute("class", "card col col-md-2 flex");
 			cardElement.setAttribute("style", "background-color: rgba(0, 0, 0, 0.1)");
 
 			resultPosterElement = document.createElement("img");
+			resultPosterElement.setAttribute("id", result.data.key);
 			resultPosterElement.setAttribute("src", result.poster_url);
 			resultPosterElement.setAttribute("class", "result mx-auto d-block rounded");
-			resultPosterElement.setAttribute("onclick", "onItemClick("+ JSON.stringify(result) +");");
+			resultPosterElement.setAttribute("onclick", "onItemClick("+ JSON.stringify(result, resultPosterElement.id) +");");
 
 			anchorElement = document.createElement("a");
 			anchorElement.setAttribute("id", "anchor");
@@ -64,7 +65,18 @@ function populateResults(results, columns=10000) {
 	});
 }
 
-async function onItemClick(result) {
+async function onItemClick(result, id) {
+	// <div class="loadingio-spinner-chunk-csoy2lexd8c"><div class="ldio-3h5pe1h2r4v">
+	console.log(id);
+	spinnerContainer = document.createElement("div");
+	spinnerContainer.setAttribute("class", "loadingio-spinner-chunk-csoy2lexd8c");
+	spinner = document.createElement("div");
+	spinner.setAttribute("class", "ldio-3h5pe1h2r4v");
+
+	parentElement = document.getElementById(id);
+	parentElement.appendChild(spinnerContainer);
+	spinnerContainer.appendChild(spinner);
+
 	console.log("Sending POST request for "+ result.title);
 	search_term = result.url;
 	const response = await fetch("http://127.0.0.1:8081/plex?search_term="+ search_term, {
