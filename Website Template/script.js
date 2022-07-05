@@ -29,12 +29,12 @@ function populateResults(results, columns=10000) {
 		resultsElement.appendChild(rowElement);
 
 		results.forEach(function(result) {
-			cardElement = document.createElement("div");
-			resultYearElement = document.createElement("p");
-			resultTitleElement = document.createElement("p");
+			var cardElement = document.createElement("div");
+			var resultYearElement = document.createElement("p");
+			var resultTitleElement = document.createElement("p");
 
 			cardElement.setAttribute("class", "card col col-md-2 flex");
-			cardElement.setAttribute("style", "background-color: rgba(0, 0, 0, 0.1)");
+			cardElement.setAttribute("style", "background-color: rgba(0, 0, 0, 0.1); animation: swing-in-top-bck 0.6s cubic-bezier(0.175, 0.885, 0.320, 1.275) "+ parseInt(result.data.key)/20 +"s both;");
 
 			resultPosterElement = document.createElement("img");
 			resultPosterElement.setAttribute("id", result.data.key);
@@ -62,17 +62,27 @@ function populateResults(results, columns=10000) {
 	});
 }
 
+const sleep = (milliseconds) => {
+  return new Promise(resolve => setTimeout(resolve, milliseconds));
+};
+
 async function onItemClick(result, id) {
-	// <div class="loadingio-spinner-chunk-csoy2lexd8c"><div class="ldio-3h5pe1h2r4v">
 	console.log(id);
 	spinnerContainer = document.createElement("div");
 	spinnerContainer.setAttribute("class", "spinner-container masked");
 	spinner = document.createElement("img");
 	spinner.setAttribute("src", "spinner.svg");
-	parentElement = document.getElementById(id).parentElement;
+	spinner.setAttribute("class", "spinner");
+	spinner.setAttribute("style", "animation: swirl-in-fwd 0.6s ease-out both;");
+	// backdrop-filter: blur(6px);
+	childElement = document.getElementById(id);
+	parentElement = childElement.parentElement;
 
 	parentElement.appendChild(spinnerContainer);
 	// spinnerContainer.appendChild(parentElement);
+	childElement.setAttribute("style", "filter: blur(2px); cursor: wait;");
+	childElement.setAttribute("onclick", "");
+	spinnerContainer.setAttribute("style", "cursor: wait;");
 	spinnerContainer.appendChild(spinner);
 
 	console.log("Sending POST request for "+ result.title);
@@ -84,16 +94,24 @@ async function onItemClick(result, id) {
 	});
 
 	const http_result = await response.json();
+	spinner.setAttribute("style", "animation: swirl-out-bck 0.6s ease-in both;");
+	childElement.setAttribute("style", "filter: blur(2px); cursor: initial;");
+	spinnerContainer.setAttribute("style", "cursor: initial;");
+	await sleep(600);
+	spinner.setAttribute("src", "check.svg");
+	spinner.setAttribute("style", "animation: heartbeat 1.5s ease-in-out both;");
 	console.log(http_result);
-	alert(http_result.message);
+	// alert(http_result.message);
 	// window.open(http_result.message[0], "_blank");
 }
 
 var formElement = document.getElementById("form-id");
+var formButtomElement = document.getElementById("submit-button-id");
 formElement.addEventListener("submit", async function(e) {
+	formButtomElement.setAttribute("style", "animation: pulsate-fwd 0.5s ease-in-out both;");
 	loadingWheel = document.createElement("div");
 	loadingWheel.setAttribute("class", "preloader");
-	formElement.appendChild(loadingWheel);
+	document.body.appendChild(loadingWheel);
 	e.preventDefault();
 	search_term = document.getElementById("search-term-id").value;
 	// console.log(search_term);
@@ -105,4 +123,5 @@ formElement.addEventListener("submit", async function(e) {
 	loadingWheel.remove();
 	console.log(http_result);
 	populateResults(http_result.message);
+	formButtomElement.setAttribute("style", "");
 });
