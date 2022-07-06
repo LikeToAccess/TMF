@@ -25,7 +25,7 @@ function populateResults(results, columns=10000) {
 
 	splitResults.forEach(function(results) {
 		rowElement = document.createElement("div");
-		rowElement.setAttribute("class", "row justify-content-center");
+		rowElement.setAttribute("class", "row justify-content-center flex");
 		resultsElement.appendChild(rowElement);
 
 		results.forEach(function(result) {
@@ -33,13 +33,13 @@ function populateResults(results, columns=10000) {
 			var resultYearElement = document.createElement("p");
 			var resultTitleElement = document.createElement("p");
 
-			cardElement.setAttribute("class", "card col col-md-2 flex");
+			cardElement.setAttribute("class", "card col col-md-2");
 			cardElement.setAttribute("style", "background-color: rgba(0, 0, 0, 0.1); animation: swing-in-top-bck 0.6s cubic-bezier(0.175, 0.885, 0.320, 1.275) "+ parseInt(result.data.key)/20 +"s both;");
 
 			resultPosterElement = document.createElement("img");
 			resultPosterElement.setAttribute("id", result.data.key);
 			resultPosterElement.setAttribute("src", result.poster_url);
-			resultPosterElement.setAttribute("class", "result mx-auto d-block rounded");
+			resultPosterElement.setAttribute("class", "result rounded");
 			resultPosterElement.setAttribute("onclick", "onItemClick("+ JSON.stringify(result) +","+ resultPosterElement.id +");");
 
 			anchorElement = document.createElement("a");

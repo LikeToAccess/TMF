@@ -3,9 +3,13 @@
 }
 
 img.result {
-	width: 150px;
+	width: 100%;
 	cursor: pointer;
+	/*padding-bottom: 10px;
+	padding-top: 15px;*/
+	/*margin: 10px;*/
 	padding-bottom: 10px;
+	transform: translateY(10px);
 }
 
 body {
@@ -23,7 +27,8 @@ h1, h2, h3, h4, h5, h6 {
 
 div.card {
 	width: 16.66%;
-	padding: 25px;
+	/*margin: 10px;*/
+	/*padding: 25px;*/
 	margin: 3px;
 	margin-bottom: 12px;
 }
@@ -142,7 +147,6 @@ h1.title {
 	transform: translate(-50%);
 	opacity: 1;
 	padding-top: 20px;
-	padding-left: 10px;  /*TEMPORARY TO FIX CENTERING ISSUE*/
 }
 
 .masked {
@@ -321,7 +325,7 @@ h1.title {
  * animation heartbeat
  * ----------------------------------------
  */
-/*@-webkit-keyframes heartbeat {
+@-webkit-keyframes heartbeat {
   from {
     -webkit-transform: scale(1);
             transform: scale(1);
@@ -354,7 +358,7 @@ h1.title {
     -webkit-animation-timing-function: ease-out;
             animation-timing-function: ease-out;
   }
-}*/
+}
 @keyframes heartbeat {
   from {
     -webkit-transform: scale(1);
