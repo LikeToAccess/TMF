@@ -13,11 +13,28 @@ function removeAllChildNodes(parent) {
     }
 }
 
-function murderTheChildren(client) {
-	removeAllChildNodes(client);
+function murderTheChildren(targetToBeExecutedFullNameAndAddressInformation) {
+	removeAllChildNodes(targetToBeExecutedFullNameAndAddressInformation);
 }
 
-// window.columnPosition = 1;
+function captchaPopUp(src) {
+	captchaContainerElement = document.createElement("div");
+	captchaContainerElement.setAttribute("class", "overlay");
+	captchaContainerElement.setAttribute("id", "captcha-container");
+	captchaImageElement = document.createElement("img");
+	captchaImageElement.setAttribute("class", "center");
+	captchaImageElement.setAttribute("src", src);
+	captchaImageElement.setAttribute("id", "captcha-image");
+	// TODO: Add this but for the Captcha API to submit Captcha responses.
+	// <form id="form-id" style="animation: slide-in-blurred-top 0.6s cubic-bezier(0.230, 1.000, 0.320, 1.000) both;">
+	// 		<input type="text" value="Star Wars Episode" id="search-term-id">
+	// 		<input type="submit" value="Submit" id="submit-button-id">
+	// 	</form>
+
+	document.body.appendChild(captchaContainerElement);
+	captchaContainerElement.appendChild(captchaImageElement);
+}
+
 function populateResults(results, columns=10000) {
 	splitResults = results.chunk(columns);
 	resultsElement = document.getElementById("results");
@@ -45,7 +62,6 @@ function populateResults(results, columns=10000) {
 			anchorElement = document.createElement("a");
 			anchorElement.setAttribute("id", "anchor");
 
-			// resultTitleElement.innerText = result.title +"\n("+ result.data.release_year +")";
 			resultTitleElement.innerText = result.title;
 			resultTitleElement.setAttribute("class", "card-text");
 
@@ -55,7 +71,6 @@ function populateResults(results, columns=10000) {
 			rowElement.appendChild(cardElement);
 			cardElement.appendChild(anchorElement);
 			cardElement.appendChild(resultTitleElement);
-			// cardElement.appendChild(lineBreakElement);
 			cardElement.appendChild(resultYearElement);
 			anchorElement.appendChild(resultPosterElement);
 		});
@@ -74,35 +89,43 @@ async function onItemClick(result, id) {
 	spinner.setAttribute("src", "spinner.svg");
 	spinner.setAttribute("class", "spinner");
 	spinner.setAttribute("style", "animation: swirl-in-fwd 0.6s ease-out both;");
-	// backdrop-filter: blur(6px);
 	childElement = document.getElementById(id);
 	parentElement = childElement.parentElement;
 
 	parentElement.appendChild(spinnerContainer);
-	// spinnerContainer.appendChild(parentElement);
 	childElement.setAttribute("style", "filter: blur(2px); cursor: wait;");
 	childElement.setAttribute("onclick", "");
 	spinnerContainer.setAttribute("style", "cursor: wait;");
 	spinnerContainer.appendChild(spinner);
 
 	console.log("Sending POST request for "+ result.title);
-	// console.log(JSON.stringify(result));
 	search_term = result.url;
 	const response = await fetch(
-		"http://127.0.0.1:8081/plex?search_term="+ search_term +"&result_data="+ JSON.stringify(result), {
+		API_BASE_URL +"/plex?search_term="+ search_term +"&result_data="+ JSON.stringify(result), {
 		method: "POST"
 	});
 
-	const http_result = await response.json();
-	spinner.setAttribute("style", "animation: swirl-out-bck 0.6s ease-in both;");
-	childElement.setAttribute("style", "filter: blur(2px); cursor: initial;");
-	spinnerContainer.setAttribute("style", "cursor: initial;");
-	await sleep(600);
-	spinner.setAttribute("src", "check.svg");
-	spinner.setAttribute("style", "animation: heartbeat 1.5s ease-in-out both;");
-	console.log(http_result);
-	// alert(http_result.message);
-	// window.open(http_result.message[0], "_blank");
+	const raw_response = await response;
+	const http_result = await raw_response.json();
+
+	if (raw_response.status == 225) {
+		const captchaImage = http_result.data;
+		console.log(captchaImage);
+		console.log(http_result);
+		alert("HTTP response status code: "+ raw_response.status +"\n"+ http_result.message);
+		captchaPopUp(captchaImage);
+	} else if (raw_response.status == 201) {
+		spinner.setAttribute("style", "animation: swirl-out-bck 0.6s ease-in both;");
+		childElement.setAttribute("style", "filter: blur(2px); cursor: initial;");
+		spinnerContainer.setAttribute("style", "cursor: initial;");
+		await sleep(600);
+		spinner.setAttribute("src", "check.svg");
+		spinner.setAttribute("style", "animation: heartbeat 1.5s ease-in-out both;");
+		console.log(http_result);
+		console.log(raw_response.status);
+	} else {
+		alert("HTTP response status code: "+ raw_response.status +"\n"+ http_result.message);
+	}
 }
 
 var formElement = document.getElementById("form-id");
@@ -114,8 +137,7 @@ formElement.addEventListener("submit", async function(e) {
 	document.body.appendChild(loadingWheel);
 	e.preventDefault();
 	search_term = document.getElementById("search-term-id").value;
-	// console.log(search_term);
-	const response = await fetch("http://127.0.0.1:8081/plex?search_term="+ search_term, {
+	const response = await fetch(API_BASE_URL +"/plex?search_term="+ search_term, {
 		method: "GET"
 	});
 

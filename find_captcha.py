@@ -10,6 +10,7 @@
 # license           : MIT
 # py version        : 3.10.2
 #==============================================================================
+import os
 from selenium.common.exceptions import *
 from selenium.webdriver.common.by import By
 from wait_until_element import Wait_Until_Element
@@ -33,7 +34,16 @@ class Find_Captcha(Find_Element, Wait_Until_Element):
 
 		return captcha_image, captcha_input, captcha_submit
 
-	def resolve_captchas(self):
+	def get_captcha_image(self):
+		captcha = self.check_captcha()
+		if captcha:
+			print("\tWARNING: Found captcha!")
+			captcha_image, *_ = captcha
+			captcha_image.screenshot("captcha.png")
+			return 225
+		return 200
+
+	def resolve_captcha(self):
 		captcha = self.check_captcha()
 		while captcha:
 			captcha_image, captcha_input, captcha_submit = captcha
@@ -43,6 +53,7 @@ class Find_Captcha(Find_Element, Wait_Until_Element):
 				captcha_input.send_keys(input("\t\tSolve Captcha:\n\t\t> "))
 				captcha_submit.click()
 			except WebDriverException:
+				os.remove("captcha.png")
 				break
 
 			self.wait_until_element(

@@ -40,7 +40,9 @@ class Scraper(Find_Captcha):
 		options.add_argument(f"user-data-dir={user_data_dir}")
 		if HEADLESS:
 			options.add_argument("--headless")
-			options.add_argument("--disable-gpu")
+			options.add_argument("window-size=1920,1080")
+			# options.add_argument("--disable-gpu")
+			options.add_argument("--mute-audio")
 		self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 		super().__init__(self.driver)
 		print(f"Completed init in {round(time.time()-init_timestamp,2)}s.")
@@ -291,7 +293,10 @@ class Scraper(Find_Captcha):
 		current_page_url += page_extension if not current_page_url.endswith(page_extension) else ""
 		self.open_link(current_page_url)
 		print("\tChecking for captchas...")
-		self.resolve_captchas()
+		if self.get_captcha_image() == 225:
+			return 225  # Made up status 225 to be the "Captcha" response code
+		print("\tNo captchas.")
+		# self.resolve_captcha()
 
 		original_video_url = self.wait_until_element(
 			By.TAG_NAME, "video", timeout=60
@@ -338,11 +343,17 @@ class Scraper(Find_Captcha):
 
 		if movie:
 			print("\tMedia is detected as 'MOVIE'.")
-			video_url, best_quality = self.convert_data_from_page_link(current_page_url, timeout=timeout)
+			data = self.convert_data_from_page_link(current_page_url, timeout=timeout)
+			if isinstance(data, int):
+				return data
+			video_url, best_quality = data
 		else:
 			if current_page_url.endswith("-online-for-free.html"):
 				print("\tMedia is detected as 'TV SHOW Episode'.")
-				video_url, best_quality = self.convert_data_from_page_link(current_page_url, timeout=timeout)
+				data = self.convert_data_from_page_link(current_page_url, timeout=timeout)
+				if isinstance(data, int):
+					return data
+				video_url, best_quality = data
 			else:
 				print("\tMedia is detected as 'TV SHOW Season'.")
 				print("\tWaiting for season page to load...")
@@ -362,7 +373,7 @@ class Scraper(Find_Captcha):
 		print(f"\tVideo link converted to {best_quality}p.")
 		print(f"Completed all scraping in {round(time.time()-get_video_url_timestamp,2)}s.")
 
-		return modified_video_url, page_link
+		return modified_video_url
 
 	def run(self):
 		while True:
