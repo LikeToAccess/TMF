@@ -22,11 +22,10 @@ function captchaPopUp(src) {
 	captchaContainerElement.setAttribute("class", "overlay");
 	captchaContainerElement.setAttribute("id", "captcha-container");
 	captchaImageElement = document.createElement("img");
-	captchaImageElement.setAttribute("class", "center");
 	captchaImageElement.setAttribute("src", src);
 	captchaImageElement.setAttribute("id", "captcha-image");
 	// TODO: Add this but for the Captcha API to submit Captcha responses.
-	// <form id="form-id" style="animation: slide-in-blurred-top 0.6s cubic-bezier(0.230, 1.000, 0.320, 1.000) both;">
+	// <form id="input-section" style="animation: slide-in-blurred-top 0.6s cubic-bezier(0.230, 1.000, 0.320, 1.000) both;">
 	// 		<input type="text" value="Star Wars Episode" id="search-term-id">
 	// 		<input type="submit" value="Submit" id="submit-button-id">
 	// 	</form>
@@ -35,68 +34,62 @@ function captchaPopUp(src) {
 	captchaContainerElement.appendChild(captchaImageElement);
 }
 
-function populateResults(results, columns=10000) {
-	splitResults = results.chunk(columns);
-	resultsElement = document.getElementById("results");
+const sleep = (milliseconds) => {
+	return new Promise(resolve => setTimeout(resolve, milliseconds));
+};
+
+function populateResults(results) {
+	resultsElement = document.getElementById("results-section");
 	murderTheChildren(resultsElement);
 
-	splitResults.forEach(function(results) {
-		rowElement = document.createElement("div");
-		rowElement.setAttribute("class", "row justify-content-center flex");
-		resultsElement.appendChild(rowElement);
+	results.forEach(async function(result) {
+		var searchResult = document.createElement("div");
+		var resultThumbnail = document.createElement("img");
+		var resultTitle = document.createElement("p");
+		var resultYear = document.createElement("p");
 
-		results.forEach(function(result) {
-			var cardElement = document.createElement("div");
-			var resultYearElement = document.createElement("p");
-			var resultTitleElement = document.createElement("p");
+		searchResult.setAttribute("class", "search-result");
+		searchResult.setAttribute("style", "animation: swing-in-top-bck 0.6s cubic-bezier(0.175, 0.885, 0.320, 1.275) "+ parseInt(result.data.key)/20 +"s both;"); // this is causing issues with the hover on searchResult
 
-			cardElement.setAttribute("class", "card col col-md-2");
-			cardElement.setAttribute("style", "background-color: rgba(0, 0, 0, 0.1); animation: swing-in-top-bck 0.6s cubic-bezier(0.175, 0.885, 0.320, 1.275) "+ parseInt(result.data.key)/20 +"s both;");
+		resultThumbnail.setAttribute("id", result.data.key);
+		resultThumbnail.setAttribute("src", result.poster_url);
+		resultThumbnail.setAttribute("class", "result-thumbnail");
+		resultThumbnail.setAttribute("onclick", "onItemClick("+ JSON.stringify(result) +","+ resultThumbnail.id +");");
 
-			resultPosterElement = document.createElement("img");
-			resultPosterElement.setAttribute("id", result.data.key);
-			resultPosterElement.setAttribute("src", result.poster_url);
-			resultPosterElement.setAttribute("class", "result rounded");
-			resultPosterElement.setAttribute("onclick", "onItemClick("+ JSON.stringify(result) +","+ resultPosterElement.id +");");
+		resultTitle.innerText = result.title;
+		resultTitle.setAttribute("class", "result-title");
 
-			anchorElement = document.createElement("a");
-			anchorElement.setAttribute("id", "anchor");
+		resultYear.innerText = "("+ result.data.release_year +")";
+		resultYear.setAttribute("class", "result-year");
 
-			resultTitleElement.innerText = result.title;
-			resultTitleElement.setAttribute("class", "card-text");
+		resultsElement.appendChild(searchResult);
+		searchResult.appendChild(resultThumbnail);
+		searchResult.appendChild(resultTitle);
+		searchResult.appendChild(resultYear);
 
-			resultYearElement.innerText = "("+ result.data.release_year +")";
-			resultYearElement.setAttribute("class", "card-text text-center");
-
-			rowElement.appendChild(cardElement);
-			cardElement.appendChild(anchorElement);
-			cardElement.appendChild(resultTitleElement);
-			cardElement.appendChild(resultYearElement);
-			anchorElement.appendChild(resultPosterElement);
-		});
+		await sleep(600 + parseInt(result.data.key)/0.02); // this is causing issues with the hover on searchResult
+		searchResult.removeAttribute("style");
 	});
 }
 
-const sleep = (milliseconds) => {
-  return new Promise(resolve => setTimeout(resolve, milliseconds));
-};
-
 async function onItemClick(result, id) {
-	console.log(id);
-	spinnerContainer = document.createElement("div");
+	var spinnerContainer = document.createElement("div");
+	var spinner = document.createElement("img");
+	var resultThumbnail = document.getElementById(id);
+	var searchResult = resultThumbnail.parentElement;
+
 	spinnerContainer.setAttribute("class", "spinner-container masked");
-	spinner = document.createElement("img");
+	spinnerContainer.setAttribute("style", "cursor: url('not-allowed.svg'), not-allowed;");
+	spinnerContainer.appendChild(spinner);
+
 	spinner.setAttribute("src", "spinner.svg");
 	spinner.setAttribute("class", "spinner");
 	spinner.setAttribute("style", "animation: swirl-in-fwd 0.6s ease-out both;");
-	childElement = document.getElementById(id);
-	parentElement = childElement.parentElement;
 
-	parentElement.appendChild(spinnerContainer);
-	childElement.setAttribute("style", "filter: blur(2px); cursor: wait;");
-	childElement.setAttribute("onclick", "");
-	spinnerContainer.setAttribute("style", "cursor: wait;");
-	spinnerContainer.appendChild(spinner);
+	resultThumbnail.setAttribute("style", "filter: blur(2px); cursor: url('not-allowed.svg'), not-allowed;");
+	resultThumbnail.setAttribute("onclick", "");
+
+	searchResult.appendChild(spinnerContainer);
 
 	console.log("Sending POST request for "+ result.title);
 	search_term = result.url;
@@ -116,19 +109,21 @@ async function onItemClick(result, id) {
 		captchaPopUp(captchaImage);
 	} else if (raw_response.status == 201) {
 		spinner.setAttribute("style", "animation: swirl-out-bck 0.6s ease-in both;");
-		childElement.setAttribute("style", "filter: blur(2px); cursor: initial;");
-		spinnerContainer.setAttribute("style", "cursor: initial;");
 		await sleep(600);
+		resultThumbnail.setAttribute("style", "filter: blur(2px); cursor: initial;");
+		spinnerContainer.removeAttribute("style", "cursor: initial;");
 		spinner.setAttribute("src", "check.svg");
 		spinner.setAttribute("style", "animation: heartbeat 1.5s ease-in-out both;");
 		console.log(http_result);
 		console.log(raw_response.status);
+		await sleep(1500);
+		spinner.removeAttribute("style");
 	} else {
 		alert("HTTP response status code: "+ raw_response.status +"\n"+ http_result.message);
 	}
 }
 
-var formElement = document.getElementById("form-id");
+var formElement = document.getElementById("input-section");
 var formButtomElement = document.getElementById("submit-button-id");
 formElement.addEventListener("submit", async function(e) {
 	formButtomElement.setAttribute("style", "animation: pulsate-fwd 0.5s ease-in-out both;");
