@@ -66,7 +66,7 @@ h1.title {
 }
 
 .search-result {
-	width: 192px;
+	width: 200px;
 	background-color: rgba(0, 0, 0, 0.1);
 	border: 1px solid gray;
 	border-radius: 12px;
@@ -140,9 +140,11 @@ h1.title {
 .spinner-container {
 	display: inline;
 	position: absolute;
-	/*top: 0;
-	left: 50%;
-	transform: translate(-50%);*/
+	/*top: 0;*/
+	/*left: 50%;*/
+	/*transform: translateX(-50%);*/
+	justify-content: center;
+	align-items: center;
 	transform: translateY(-180%);
 	opacity: 1;
 	padding-top: 20px;
