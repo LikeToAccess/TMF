@@ -49,6 +49,7 @@ function populateResults(results) {
 		var resultYear = document.createElement("p");
 
 		searchResult.setAttribute("class", "search-result");
+		// searchResult.setAttribute("width", "200px");
 		searchResult.setAttribute("style", "animation: swing-in-top-bck 0.6s cubic-bezier(0.175, 0.885, 0.320, 1.275) "+ parseInt(result.data.key)/20 +"s both;"); // this is causing issues with the hover on searchResult
 
 		resultThumbnail.setAttribute("id", result.data.key);

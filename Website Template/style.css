@@ -61,12 +61,15 @@ h1.title {
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: center;
-	padding-left: 100px;
-	padding-right: 100px;
+	/*padding-left: 100px;
+	padding-right: 100px;*/
+	padding-left: 4.4%;
+	padding-right: 4.4%;
 }
 
 .search-result {
 	width: 200px;
+	min-width: 200px;
 	background-color: rgba(0, 0, 0, 0.1);
 	border: 1px solid gray;
 	border-radius: 12px;
