@@ -371,7 +371,7 @@ class Scraper(Find_Captcha):
 			.replace("_360&token=ip=", f"_{best_quality}&token=ip=")
 
 		print(f"\tVideo link converted to {best_quality}p.")
-		print(f"Completed all scraping in {round(time.time()-get_video_url_timestamp,2)}s.")
+		print(f"\tCompleted all scraping in {round(time.time()-get_video_url_timestamp,2)}s.")
 
 		return modified_video_url
 

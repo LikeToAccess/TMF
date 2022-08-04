@@ -70,7 +70,7 @@ class Plex(Resource):
 		download = Download(url, "TEST/movie.mp4")
 		download.run()
 		if download.verify(): return {"message": "Created", "url": url, "data": data}, 201
-		else: return {"message": "Service unavailable"}, 503
+		else: return {"message": "Gone"}, 410
 
 class Sample(Resource):
 	def get(self):
