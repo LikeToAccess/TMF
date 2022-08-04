@@ -75,7 +75,7 @@ class Download:
 		# 		if round(percentage_complete, 1) % 2.5 == 0:
 		# 			print(f"{round(percentage_complete)}%")
 		# print(f"100%")
-		os.rename(self.destination +".crdownload", self.destination)
+		rename_file(self.destination +".crdownload", self.destination)
 		print(f"\tCompleted download in {round(time.time()-url_download_timestamp,2)}s.")
 
 
@@ -85,11 +85,11 @@ class Download:
 
 		if file_size != self.target_size:  # File must match the target file size
 			print("\tERROR: File size does not match!")
-			os.rename(self.destination, self.destination +".crdownload")
+			rename_file(self.destination, self.destination +".crdownload")
 			return False
 		if file_size <= self.minimum_file_size:  # File must be larger than 10.00 MB
 			print(f"\tERROR: File size is too small! (< {self.minimum_file_size} Bytes)")
-			os.rename(self.destination, self.destination +".crdownload")
+			rename_file(self.destination, self.destination +".crdownload")
 			return False
 
 		print("\tFile size match OK.\n\tVerification passed.")

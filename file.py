@@ -14,6 +14,13 @@ import os
 import json
 
 
+def rename_file(source, filename):
+	try:
+		os.rename(source, filename)
+	except FileExistsError:
+		remove_file(filename)
+		rename_file(source, filename)
+
 def remove_file(filename):
 	try:
 		os.remove(filename)
