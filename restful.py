@@ -66,7 +66,8 @@ class Plex(Resource):
 			# print(image_data)
 			return {"message": "Captcha", "data": image_data}, 225
 
-		download = Download(url, data)
+		# download = Download(url, data)
+		download = Download(url, "TEST/movie.mp4")
 		download.run()
 		if download.verify(): return {"message": "Created", "url": url, "data": data}, 201
 		else: return {"message": "Service unavailable"}, 503

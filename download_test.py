@@ -100,7 +100,6 @@ def main():
 	download = Download(url, destination)
 	download.run()
 	download.verify()
-	print("Done!")
 
 
 if __name__ == "__main__":
