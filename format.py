@@ -68,7 +68,7 @@ class Format:
 					r"^.*?\([^\d]*(\d+)[^\d]*\).*$", safe_title
 				) else f"{safe_title} ({self.release_year})"
 			)
-			safe_title = f"../MOVIES/{safe_title}/{safe_title}.mp4"
+			safe_title = os.path.join(ROOT_LIBRARY_LOCATION, f"MOVIES/{safe_title}/{safe_title}.mp4")
 		elif self.type == "TV SHOW":
 			pass  # TV Show
 		else:

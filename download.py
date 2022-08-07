@@ -6,6 +6,7 @@ from requests.exceptions import *
 from file import *
 
 
+# Only used during testing, doesn't affect the API
 url = "https://stream-1-1-ip4.loadshare.org/slice/1/VideoID-J0jblDNB/ZgHnoD/Rf9KYb/JJwZ9U/yw6vyb/1080?name=booksmart_1080&token=ip=12.191.26.4~st=1659584599~exp=1659598999~acl=/*~hmac=14c16c1e608e6275c1201c3ffc6e67410bfdc4565a90250c42844dcb4394fb2a"
 destination = "TEST/movie.mp4"
 

@@ -22,3 +22,8 @@ HEADLESS = True
 # The default value is "0.0.0.0" (for localhost) and 8080.
 HOST = "0.0.0.0"
 PORT = 8081
+
+# Root Plex library directory, this will set the download location for all
+# media.
+# The default value is "../"
+ROOT_LIBRARY_LOCATION = "../"
