@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# filename          : main.py
+# filename          : scraper.py
 # description       : Respond to GET requests from websites with MP4 links
 # author            : Ian Ault
 # email             : liketoaccess@protonmail.com

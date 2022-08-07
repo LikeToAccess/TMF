@@ -15,8 +15,9 @@ from flask import Flask
 from flask_restful import Resource, Api, reqparse
 from flask_cors import CORS
 from waitress import serve
-from main import Scraper
-from download_test import Download
+from scraper import Scraper
+from download import Download
+from format import Format
 from settings import *
 
 
@@ -67,7 +68,7 @@ class Plex(Resource):
 			return {"message": "Captcha", "data": image_data}, 225
 
 		# download = Download(url, data)
-		download = Download(url, "TEST/movie.mp4")
+		download = Download(url, Format(data).format_file_name())
 		download.run()
 		if download.verify(): return {"message": "Created", "url": url, "data": data}, 201
 		else: return {"message": "Gone"}, 410
