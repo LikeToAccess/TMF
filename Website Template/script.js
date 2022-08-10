@@ -47,6 +47,8 @@ function populateResults(results) {
 		var resultThumbnail = document.createElement("img");
 		var resultTitle = document.createElement("p");
 		var resultYear = document.createElement("p");
+		var resultImdb = document.createElement("p");
+		var resultDuration = document.createElement("p");
 
 		searchResult.setAttribute("class", "search-result");
 		// searchResult.setAttribute("width", "200px");
@@ -60,13 +62,23 @@ function populateResults(results) {
 		resultTitle.innerText = result.title;
 		resultTitle.setAttribute("class", "result-title");
 
-		resultYear.innerText = "("+ result.data.release_year +")";
-		resultYear.setAttribute("class", "result-year");
+
+		// resultYear.innerText = "("+ result.data.release_year +")";
+		resultYear.innerText = result.data.release_year;
+		resultYear.setAttribute("class", "result-year label");
+
+		resultImdb.innerText = result.data.imdb_score;
+		resultImdb.setAttribute("class", "result-imdb label");
+
+		resultDuration.innerText = result.data.duration;
+		resultDuration.setAttribute("class", "result-duration label");
 
 		resultsElement.appendChild(searchResult);
 		searchResult.appendChild(resultThumbnail);
 		searchResult.appendChild(resultTitle);
 		searchResult.appendChild(resultYear);
+		searchResult.appendChild(resultImdb);
+		searchResult.appendChild(resultDuration);
 
 		await sleep(600 + parseInt(result.data.key)/0.02); // this is causing issues with the hover on searchResult
 		searchResult.removeAttribute("style");
@@ -74,6 +86,13 @@ function populateResults(results) {
 }
 
 async function onItemClick(result, id) {
+	console.log(result.data.quality_tag);
+	if (result.data.quality_tag == "CAM") {
+		var proceed_to_download = confirm(result.title +" is in "+ result.data.quality_tag +" quality. Are you sure you want to proceed?");
+		if (!proceed_to_download) {
+			return;
+		}
+	}
 	var spinnerContainer = document.createElement("div");
 	var spinner = document.createElement("img");
 	var resultThumbnail = document.getElementById(id);
@@ -124,6 +143,14 @@ async function onItemClick(result, id) {
 	}
 }
 
+// var popButtomElement = document.getElementById("pop-button-id");
+// popButtomElement.addEventListener("submit", async function(e) {
+// 	popButtomElement.setAttribute("style", "animation: pulsate-fwd 0.5s ease-in-out both;");
+// 	loadingWheel = document.createElement("div");
+// 	loadingWheel.setAttribute("class", "preloader");
+// 	document.body.appendChild(loadingWheel);
+// 	// e.preventDefault();
+// });
 var formElement = document.getElementById("input-section");
 var formButtomElement = document.getElementById("submit-button-id");
 formElement.addEventListener("submit", async function(e) {
@@ -135,10 +162,12 @@ formElement.addEventListener("submit", async function(e) {
 	search_term = document.getElementById("search-term-id").value;
 	const response = await fetch(API_BASE_URL +"/plex?search_term="+ search_term, {
 		method: "GET"
+	}).catch(function() {
+		alert("API Error!");
 	});
 
-	const http_result = await response.json();
 	loadingWheel.remove();
+	const http_result = await response.json();
 	console.log(http_result);
 	populateResults(http_result.message);
 	formButtomElement.setAttribute("style", "");
