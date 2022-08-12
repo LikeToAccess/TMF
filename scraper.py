@@ -333,7 +333,7 @@ class Scraper(Find_Captcha):
 
 		if self.current_page_is_404():
 			print("\tERROR: Page error 404!")
-			return 404
+			return [], 404
 
 		movie = bool(
 			self.find_element_by_xpath(
@@ -345,14 +345,14 @@ class Scraper(Find_Captcha):
 			print("\tMedia is detected as 'MOVIE'.")
 			data = self.convert_data_from_page_link(current_page_url, timeout=timeout)
 			if isinstance(data, int):
-				return data
+				return [], data
 			video_url, best_quality = data
 		else:
 			if current_page_url.endswith("-online-for-free.html"):
 				print("\tMedia is detected as 'TV SHOW Episode'.")
 				data = self.convert_data_from_page_link(current_page_url, timeout=timeout)
 				if isinstance(data, int):
-					return data
+					return [], data
 				video_url, best_quality = data
 			else:
 				print("\tMedia is detected as 'TV SHOW Season'.")
@@ -373,7 +373,7 @@ class Scraper(Find_Captcha):
 		print(f"\tVideo link converted to {best_quality}p.")
 		print(f"\tCompleted all scraping in {round(time.time()-get_video_url_timestamp,2)}s.")
 
-		return modified_video_url
+		return [modified_video_url], 200
 
 	def run(self):
 		while True:
