@@ -125,6 +125,7 @@ async function onItemClick(result, id) {
 		const captchaImage = http_result.data;
 		console.log(captchaImage);
 		console.log(http_result);
+		stopSpinner(spinner);
 		alert("HTTP response status code: "+ raw_response.status +"\n"+ http_result.message);
 		captchaPopUp(captchaImage);
 	} else if (raw_response.status == 201) {
@@ -139,8 +140,18 @@ async function onItemClick(result, id) {
 		await sleep(1500);
 		spinner.removeAttribute("style");
 	} else {
+		stopSpinner(spinner);
 		alert("HTTP response status code: "+ raw_response.status +"\n"+ http_result.message);
 	}
+}
+
+async function stopSpinner(spinner) {
+	spinner.setAttribute("style", "animation: swirl-out-bck 0.6s ease-in both;");
+	await sleep(600);
+	spinner.setAttribute("src", "error.svg");
+	spinner.setAttribute("style", "animation: heartbeat 1.5s ease-in-out both;");
+	await sleep(1500);
+	spinner.removeAttribute("style");
 }
 
 // var popButtomElement = document.getElementById("pop-button-id");

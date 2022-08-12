@@ -11,20 +11,26 @@
 # py version        : 3.10.2 (must run on 3.6 or higher)
 #==============================================================================
 import base64
+import threading
 from flask import Flask
-from flask_restful import Resource, Api, reqparse
-from flask_cors import CORS
-from waitress import serve
-from scraper import Scraper
-from download import Download
 from format import Format
+from scraper import Scraper
+from waitress import serve
+from download import Download
 from settings import *
+from flask_cors import CORS
+from flask_restful import Resource, Api, reqparse
 
 
 app = Flask(__name__)
 api = Api(app)
 CORS(app, resources={r"*": {"origins": "*"}})
 scraper = Scraper()
+<<<<<<< HEAD
+=======
+threads = []
+# download = Download()
+>>>>>>> origin/main
 
 
 class Plex(Resource):
@@ -53,24 +59,30 @@ class Plex(Resource):
 		if not args:
 			return {"message": "Bad request"}, 400
 
-		url = scraper.get_video_url_from_page_link(
+		# TODO: Make TV Shows work
+		queue, status = scraper.get_video_url_from_page_link(
 				args["search_term"]
 			)
-		data = args["result_data"]
+		data = args["result_data"]  # if the media is a TV Show than the data is useless
 
-		if url == 404:
+		# print(queue)   # URL (list)
+		# print(status)  # 200
+		# print(data)    # DATA
+
+		if status == 404:
 			return {"message": "Page not found"}, 404
-		if url == 225:
+		if status == 225:
 			image_data = base64.b64encode(open("captcha.png", "rb").read()).decode("utf-8")
 			image_data = f"data:image/png;base64,{image_data}"
-			# print(image_data)
 			return {"message": "Captcha", "data": image_data}, 225
 
-		# download = Download(url, data)
-		download = Download(url, Format(data).format_file_name())
-		download.run()
-		if download.verify(): return {"message": "Created", "url": url, "data": data}, 201
-		else: return {"message": "Gone"}, 410
+		# download = Download(status, data)
+
+		for url in queue:
+			download = Download(url, Format(data).format_file_name())
+			download.run()
+			if download.verify(): return {"message": "Created", "data": data}, 201
+			else: return {"message": "Gone (failure to verify)"}, 410
 
 class Sample(Resource):
 	def get(self):

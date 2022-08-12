@@ -43,6 +43,7 @@ def create_request(url):
 
 	return request
 
+
 class Download:
 	def __init__(self, url, destination):
 		self.url = url
