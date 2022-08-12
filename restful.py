@@ -25,7 +25,6 @@ app = Flask(__name__)
 api = Api(app)
 CORS(app, resources={r"*": {"origins": "*"}})
 scraper = Scraper()
-# download = Download()
 
 
 class Plex(Resource):
