@@ -4,3 +4,5 @@ webdriver_manager
 jmespath
 waitress
 flask-cors
+flask_restful
+wget
