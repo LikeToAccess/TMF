@@ -12,10 +12,17 @@
 	<link rel="shortcut icon" type="image/png" href="jesse_we_need_to_bananner.png"/>
 </head>
 <body>
+	<svg class='invisible'>
+		<filter id='svg-blur'>
+			<feGaussianBlur stdDeviation='3'></feGaussianBlur>
+			<feColorMatrix type='matrix' values='1 0 0 0 0, 0 1 0 0 0, 0 0 1 0 0, 0 0 0 9 0'></feColorMatrix>
+			<feComposite in2='SourceGraphic' operator='in'></feComposite>
+		</filter>
+	</svg>
 	<!-- <img src="jesse_we_need_to_bananner.png" width="100px"> -->
 	<h1 class="title text-reflect" style="animation: slide-in-elliptic-top-fwd 0.7s cubic-bezier(0.250, 0.460, 0.450, 0.940) both;">Welcome to Rico's Island!</h1>
 	<div style="margin-bottom: 10px;" class="text-center">
-		<form id="input-section" style="animation: slide-in-blurred-top 0.6s cubic-bezier(0.230, 1.000, 0.320, 1.000) both;">
+		<form id="input-section" autocomplete="off" style="animation: slide-in-blurred-top 0.6s cubic-bezier(0.230, 1.000, 0.320, 1.000) both;">
 			<input type="text" id="search-term-id">
 			<input type="submit" value="Submit" id="submit-button-id">
 			<!-- <button type="submit" value="Popular" id="pop-button-id"> -->
@@ -23,15 +30,13 @@
 	</div>
 
 	<div id="results-section">
-		<!-- <div class="search-result" style="">
-			<img id="0" src="demo-thumbnail.jpg" class="result-thumbnail" onclick="onItemClick('DATA');">
-			<p class="result-title">
-				Flushed Away
-			</p>
-			<p class="result-year">
-				(2006)
-			</p>
-		</div> -->
+		<div class="search-result" hidden>
+			<img id="-1" src="demo-thumbnail.jpg" class="result-thumbnail" onclick="onItemClick('DATA');">
+			<p class="result-title">Flushed Away</p>
+			<p class="result-year label"> 2006 </p>
+			<p class="result-imdb label"> IMDb: 9.7 </p>
+			<p class="result-duration label"> 85 min </p>
+		</div>
 	</div>
 </body>
 </html>

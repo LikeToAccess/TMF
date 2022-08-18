@@ -64,13 +64,13 @@ function populateResults(results) {
 
 
 		// resultYear.innerText = "("+ result.data.release_year +")";
-		resultYear.innerText = result.data.release_year;
+		resultYear.innerText = " "+ result.data.release_year +" ";
 		resultYear.setAttribute("class", "result-year label");
 
-		resultImdb.innerText = result.data.imdb_score;
+		resultImdb.innerText = " "+ result.data.imdb_score +" ";
 		resultImdb.setAttribute("class", "result-imdb label");
 
-		resultDuration.innerText = result.data.duration;
+		resultDuration.innerText = " "+ result.data.duration +" ";
 		resultDuration.setAttribute("class", "result-duration label");
 
 		resultsElement.appendChild(searchResult);
@@ -106,7 +106,7 @@ async function onItemClick(result, id) {
 	spinner.setAttribute("class", "spinner");
 	spinner.setAttribute("style", "animation: swirl-in-fwd 0.6s ease-out both;");
 
-	resultThumbnail.setAttribute("style", "filter: blur(2px); cursor: url('not-allowed.svg'), not-allowed;");
+	resultThumbnail.setAttribute("style", "filter: url(#svg-blur); cursor: url('not-allowed.svg'), not-allowed;");
 	resultThumbnail.setAttribute("onclick", "");
 
 	searchResult.appendChild(spinnerContainer);
@@ -131,7 +131,7 @@ async function onItemClick(result, id) {
 	} else if (raw_response.status == 201) {
 		spinner.setAttribute("style", "animation: swirl-out-bck 0.6s ease-in both;");
 		await sleep(600);
-		resultThumbnail.setAttribute("style", "filter: blur(2px); cursor: initial;");
+		resultThumbnail.setAttribute("style", "filter: url(#svg-blur); cursor: initial;");
 		spinnerContainer.removeAttribute("style", "cursor: initial;");
 		spinner.setAttribute("src", "check.svg");
 		spinner.setAttribute("style", "animation: heartbeat 1.5s ease-in-out both;");
