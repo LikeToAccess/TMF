@@ -11,15 +11,17 @@
 # py version        : 3.10.2 (must run on 3.6 or higher)
 #==============================================================================
 import base64
-import threading
-from flask import Flask
-from format import Format
-from scraper import Scraper
+# import threading
+
+from flask_restful import Resource, Api, reqparse
+from flask_cors import CORS
 from waitress import serve
+from flask import Flask
+
 from download import Download
 from settings import *
-from flask_cors import CORS
-from flask_restful import Resource, Api, reqparse
+from scraper import Scraper
+from format import Format
 
 
 app = Flask(__name__)
@@ -79,7 +81,7 @@ class Plex(Resource):
 			download = Download(url, Format(data).format_file_name())
 			download.run()
 			if download.verify(): return {"message": "Created", "data": data}, 201
-			else: return {"message": "Gone (failure to verify)"}, 410
+			return {"message": "Gone (failure to verify)"}, 410
 
 class Sample(Resource):
 	def get(self):
