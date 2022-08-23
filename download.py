@@ -1,7 +1,9 @@
 import os
-import wget
 import time
+
+import wget
 import requests
+
 from requests.exceptions import *
 from file import *
 
@@ -55,6 +57,14 @@ class Download:
 
 		print(f"\tRequest status code: {self.request.status_code}.")
 
+	def progress_report(self, count, step=2.5):
+		percentage_complete = count * self.chunk_size / self.target_size * 100
+		if round(percentage_complete, 1) % step == 0:
+			return f"{round(percentage_complete)}%"
+		if self.target_size == os.path.getsize(self.destination +".crdownload"):
+			return "100%"
+		return None
+
 	def run(self):
 		self.target_size = int(self.request.headers.get("content-length", 0))
 		url_download_timestamp = time.time()
@@ -71,24 +81,21 @@ class Download:
 				# 	url_download_timestamp,
 				# 	target_size=self.target_size
 				# )
-				# time.sleep(0.01)
-		# 		percentage_complete = count * self.chunk_size / target_size * 100
-		# 		if round(percentage_complete, 1) % 2.5 == 0:
-		# 			print(f"{round(percentage_complete)}%")
-		# print(f"100%")
+				current_progress = self.progress_report(count, step=2.5)
+				if current_progress: print(current_progress)
 		rename_file(self.destination +".crdownload", self.destination)
 		print(f"\tCompleted download in {round(time.time()-url_download_timestamp,2)}s.")
 
 
 	def verify(self):
 		print("Verifying current download...")
-		file_size = os.path.getsize(self.destination)
+		actual_size = os.path.getsize(self.destination)
 
-		if file_size != self.target_size:  # File must match the target file size
+		if actual_size != self.target_size:  # File must match the target file size
 			print("\tERROR: File size does not match!")
 			rename_file(self.destination, self.destination +".crdownload")
 			return False
-		if file_size <= self.minimum_file_size:  # File must be larger than 10.00 MB
+		if actual_size <= self.minimum_file_size:  # File must be larger than 10.00 MB
 			print(f"\tERROR: File size is too small! (< {self.minimum_file_size} Bytes)")
 			rename_file(self.destination, self.destination +".crdownload")
 			return False

@@ -11,6 +11,7 @@
 # py version        : 3.10.2
 #==============================================================================
 import os
+import time
 from selenium.common.exceptions import *
 from selenium.webdriver.common.by import By
 from wait_until_element import Wait_Until_Element
@@ -39,7 +40,13 @@ class Find_Captcha(Find_Element, Wait_Until_Element):
 		if captcha:
 			print("\tWARNING: Found captcha!")
 			captcha_image, *_ = captcha
+			timeout = time.time()
+			print("\tWaiting for captcha image to load...")
+			while captcha_image.size["width"] == 0 or time.time() - timeout < 5:
+				time.sleep(0.25)
+			# self.driver.save_screenshot("screenshot.png")
 			captcha_image.screenshot("captcha.png")
+			print("\tCaptcha image saved.")
 			return 225
 		return 200
 
