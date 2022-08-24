@@ -13,6 +13,7 @@
 		--body-color: #444444;
 		--body-background-color: #FFF;
 		--body-background-image: url("background-bottom-gradient-black-and-white-1.png");
+		--body-background-image-narrow: url("background-light-mobile.png");
 	}
 }
 
@@ -22,6 +23,7 @@
 		--body-color: #EEE;
 		--body-background-color: #131313;
 		--body-background-image: url("background-bottom-gradient-2.png");
+		--body-background-image-narrow: url("background-dark-mobile.png");
 	}
 }
 
@@ -244,4 +246,15 @@ h1.title {
 
 .masked {
 	clip-path: inset(5px 25px 0px 25px);
+}
+
+/**
+ * ----------------------------------------
+ * Narrow window/mobile styling
+ * ----------------------------------------
+ */
+@media only screen and (max-width: 700px) {
+	body {
+	  background-image: var(--body-background-image-narrow);
+	}
 }
