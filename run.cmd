@@ -1,7 +1,6 @@
 title The Movie Finder API
-C:
-cd C:\Users\Administrator\Documents\Python\TMF
+cd /D "%~dp0"
 cls
 python restful.py
-timeout 5
+timeout 90
 exit
