@@ -112,9 +112,9 @@ async function onItemClick(result, id) {
 	searchResult.appendChild(spinnerContainer);
 
 	console.log("Sending POST request for "+ result.title);
-	search_term = result.url;
+	query = result.url;
 	const response = await fetch(
-		API_BASE_URL +"/plex?search_term="+ search_term +"&result_data="+ JSON.stringify(result), {
+		API_BASE_URL +"/search?query="+ query +"&data="+ JSON.stringify(result), {
 		method: "POST"
 	});
 
@@ -170,8 +170,8 @@ formElement.addEventListener("submit", async function(e) {
 	loadingWheel.setAttribute("class", "preloader");
 	document.body.appendChild(loadingWheel);
 	e.preventDefault();
-	search_term = document.getElementById("search-term-id").value;
-	const response = await fetch(API_BASE_URL +"/plex?search_term="+ search_term, {
+	query = document.getElementById("search-term-id").value;
+	const response = await fetch(API_BASE_URL +"/search?query="+ query, {
 		method: "GET"
 	}).catch(function() {
 		alert("API Error!");

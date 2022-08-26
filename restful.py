@@ -32,17 +32,17 @@ threads = []
 # download = Download()
 
 
-class Plex(Resource):
+class Search(Resource):
 	def get(self):
 		# Gets search results from a search term
 		parser = reqparse.RequestParser()
-		parser.add_argument("search_term", required=True, type=str, location="args")
+		parser.add_argument("query", required=True, type=str, location="args")
 		args = parser.parse_args()
 		if not args:
 			return {"message": "Bad request"}, 400
 
 		data = scraper.search(
-				args["search_term"]
+				args["query"]
 			)
 
 		if data == 404 or not data:
@@ -52,17 +52,17 @@ class Plex(Resource):
 	def post(self):
 		# Adds media to the server
 		parser = reqparse.RequestParser()
-		parser.add_argument("search_term", required=True,  type=str, location="args")
-		parser.add_argument("result_data", required=False, type=str, location="args")
+		parser.add_argument("query", required=True,  type=str, location="args")
+		parser.add_argument("data", required=False, type=str, location="args")
 		args = parser.parse_args()
 		if not args:
 			return {"message": "Bad request"}, 400
 
 		# TODO: Make TV Shows work
 		queue, status = scraper.get_video_url_from_page_link(
-				args["search_term"]
+				args["query"]
 			)
-		data = args["result_data"]  # if the media is a TV Show than the data is useless
+		data = args["data"]  # if the media is a TV Show than the data is useless
 
 		# print(queue)   # URL (list)
 		# print(status)  # 200
@@ -83,9 +83,23 @@ class Plex(Resource):
 			if download.verify(): return {"message": "Created", "data": data}, 201
 			return {"message": "Gone (failure to verify)"}, 410
 
-class Sample(Resource):
+class Test(Resource):
 	def get(self):
 		return {"message": "Not implemented"}, 501
+
+	def post(self):
+		return {"message": "Not implemented"}, 501
+
+class Catagory(Resource):
+	def get(self):
+		parser = reqparse.RequestParser()
+		parser.add_argument("query", required=True, type=str, location="args")
+		args = parser.parse_args()
+		if not args:
+			return {"message": "Bad request"}, 400
+
+		query = args["query"]
+		return {"message": query}, 200
 
 	def post(self):
 		return {"message": "Not implemented"}, 501
@@ -99,8 +113,9 @@ class Captcha(Resource):
 
 
 def main():
-	api.add_resource(Plex, "/plex")
-	api.add_resource(Sample, "/sample")
+	api.add_resource(Search, "/search")
+	api.add_resource(Test, "/test")
+	api.add_resource(Catagory, "/catagory")
 	api.add_resource(Captcha, "/captcha")
 	serve(app, host=HOST, port=PORT)
 	# app.run()
