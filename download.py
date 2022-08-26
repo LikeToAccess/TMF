@@ -75,14 +75,9 @@ class Download:
 		with open(self.destination +".crdownload", "wb") as file:
 			for count, chunk in enumerate(self.request.iter_content(chunk_size=self.chunk_size)):
 				file.write(chunk)
-				# progress.file_size(
-				# 	self.filename,
-				# 	count,
-				# 	url_download_timestamp,
-				# 	target_size=self.target_size
-				# )
-				current_progress = self.progress_report(count, step=2.5)
-				if current_progress: print(current_progress)
+				# TODO: Progress function not working :(
+				# current_progress = self.progress_report(count, step=2.5)
+				# if current_progress: print(current_progress)
 		rename_file(self.destination +".crdownload", self.destination)
 		print(f"\tCompleted download in {round(time.time()-url_download_timestamp,2)}s.")
 
