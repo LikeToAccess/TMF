@@ -17,26 +17,82 @@ function murderTheChildren(targetToBeExecutedFullNameAndAddressInformation) {
 	removeAllChildNodes(targetToBeExecutedFullNameAndAddressInformation);
 }
 
-function captchaPopUp(src) {
-	captchaContainerElement = document.createElement("div");
-	captchaContainerElement.setAttribute("class", "overlay");
-	captchaContainerElement.setAttribute("id", "captcha-container");
-	captchaImageElement = document.createElement("img");
-	captchaImageElement.setAttribute("src", src);
-	captchaImageElement.setAttribute("id", "captcha-image");
-	// TODO: Add this but for the Captcha API to submit Captcha responses.
-	// <form id="input-section" style="animation: slide-in-blurred-top 0.6s cubic-bezier(0.230, 1.000, 0.320, 1.000) both;">
-	// 		<input type="text" value="Star Wars Episode" id="search-term-id">
-	// 		<input type="submit" value="Submit" id="submit-button-id">
-	// 	</form>
-
-	document.body.appendChild(captchaContainerElement);
-	captchaContainerElement.appendChild(captchaImageElement);
-}
-
 const sleep = (milliseconds) => {
 	return new Promise(resolve => setTimeout(resolve, milliseconds));
 };
+
+function captchaPopUp(src, result, id) {
+	// <div class="overlay">
+	// 	<div id="captcha-container">
+	// 		<p>Captcha!</p>
+	// 		<img src="https://gomovies-online.cam/site/captcha" id="captcha-image" style="background:#fff;">
+	// 		<form>
+	// 			<input type="text" id="captcha-response-id">
+	// 			<input type="submit" value="Submit" id="captcha-submit-button-id">
+	// 		</form>
+	// 	</div>
+	// </div>
+	var overlayElement = document.createElement("div");
+	var captchaContainerElement = document.createElement("div");
+	var captchaTitleElement = document.createElement("p");
+	var captchaImageElement = document.createElement("img");
+	var captchaFormElement = document.createElement("form");
+	var captchaResponseElement = document.createElement("input");
+	var captchaSubmitButtonElement = document.createElement("input");
+
+	overlayElement.setAttribute("class", "overlay");
+	overlayElement.setAttribute("style", "animation: fade-in 0.6s cubic-bezier(0.390, 0.575, 0.565, 1.000) both;");
+
+	captchaContainerElement.setAttribute("id", "captcha-container");
+	captchaContainerElement.setAttribute("style", "animation: slide-in-blurred-top 0.6s cubic-bezier(0.230, 1.000, 0.320, 1.000) both;");
+
+	captchaTitleElement.innerText = "Captcha!";
+
+	captchaImageElement.setAttribute("src", src);
+	captchaImageElement.setAttribute("id", "captcha-image");
+
+	captchaResponseElement.setAttribute("type", "text");
+	captchaResponseElement.setAttribute("id", "captcha-response-id");
+
+	captchaSubmitButtonElement.setAttribute("type", "submit");
+	captchaSubmitButtonElement.setAttribute("value", "Submit");
+	captchaSubmitButtonElement.setAttribute("id", "captcha-submit-button-id");
+
+	document.body.appendChild(overlayElement);
+	overlayElement.appendChild(captchaContainerElement);
+	captchaContainerElement.appendChild(captchaTitleElement);
+	captchaContainerElement.appendChild(captchaImageElement);
+	captchaContainerElement.appendChild(captchaFormElement);
+	captchaFormElement.appendChild(captchaResponseElement);
+	captchaFormElement.appendChild(captchaSubmitButtonElement);
+
+	captchaFormElement.addEventListener("submit", async function(e) {
+		captchaSubmitButtonElement.setAttribute("style", "animation: pulsate-fwd 0.5s ease-in-out both;");
+		e.preventDefault();
+		captchaResponse = captchaResponseElement.value;
+		const response = await fetch(API_BASE_URL +"/captcha?key="+ captchaResponse, {
+			method: "POST"
+		}).catch(function() {
+			alert("API Error!");
+		});
+
+		const raw_response = await response;
+		const http_result = await raw_response.json();
+		console.log(http_result);
+		if (raw_response.status == 200) {
+			console.log("Captcha solved!");
+			// murderTheChildren(overlayElement);
+			overlayElement.remove();
+		} else if (raw_response.status == 225) {
+			console.log("Captcha not solved.");
+		} else {
+			alert("HTTP response status code: "+ raw_response.status +"\n"+ http_result.message);
+		}
+
+		await sleep(500);
+		captchaSubmitButtonElement.removeAttribute("style");
+	});
+}
 
 function populateResults(results) {
 	resultsElement = document.getElementById("results-section");
@@ -123,11 +179,11 @@ async function onItemClick(result, id) {
 
 	if (raw_response.status == 225) {
 		const captchaImage = http_result.data;
-		console.log(captchaImage);
+		// console.log(captchaImage);
 		console.log(http_result);
 		stopSpinner(spinner);
-		alert("HTTP response status code: "+ raw_response.status +"\n"+ http_result.message);
-		captchaPopUp(captchaImage);
+		console.log("HTTP response status code: "+ raw_response.status +"\n"+ http_result.message);
+		captchaPopUp(captchaImage, result, id);
 	} else if (raw_response.status == 201) {
 		spinner.setAttribute("style", "animation: swirl-out-bck 0.6s ease-in both;");
 		await sleep(600);
