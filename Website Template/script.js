@@ -71,7 +71,12 @@ function captchaPopUp(src, result, id) {
 		e.preventDefault();
 		captchaResponse = captchaResponseElement.value;
 		const response = await fetch(API_BASE_URL +"/captcha?key="+ captchaResponse, {
-			method: "POST"
+			method: "POST",
+			headers: {
+				"Accept": "application/json",
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify(result)  // Pass through result context as JSON
 		}).catch(function() {
 			alert("API Error!");
 		});
@@ -81,7 +86,6 @@ function captchaPopUp(src, result, id) {
 		console.log(http_result);
 		if (raw_response.status == 200) {
 			console.log("Captcha solved!");
-			// murderTheChildren(overlayElement);
 			overlayElement.remove();
 		} else if (raw_response.status == 225) {
 			console.log("Captcha not solved.");

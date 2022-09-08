@@ -37,6 +37,10 @@ from settings import *
 # def filter_bad_characters(data, ):
 # 	return re.sub(bad_characters, "", data).encode("ascii", "ignore").decode()
 
+def contains_only_letters(data):
+	matches = re.findall(r"[^a-zA-Z]+", data)
+	return not bool(matches)
+
 class Format:
 	def __init__(self, result):
 		# print(url)
