@@ -294,7 +294,7 @@ class Scraper(Find_Captcha):
 		self.open_link(current_page_url)
 		print("\tChecking for captchas...")
 		if self.get_captcha_image() == 225:
-			return 225  # Made up status 225 to be the "Captcha" response code
+			return 225  # Made up status 225 to be the "Captcha" response code (BAD)
 		print("\tNo captchas.")
 		# self.resolve_captcha()
 

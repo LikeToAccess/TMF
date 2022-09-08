@@ -31,13 +31,13 @@ class Find_Captcha(Find_Element, Wait_Until_Element):
 			captcha_input = self.driver.find_element(By.XPATH, "//*[@id=\"checkcapchamodelyii-captcha\"]")
 			captcha_submit = self.driver.find_element(By.XPATH, "//*[@id=\"player-captcha\"]/div[3]/div/div")
 		except TimeoutException:
-			return False
+			captcha_image, captcha_input, captcha_submit = False, False, False
 
 		return captcha_image, captcha_input, captcha_submit
 
 	def get_captcha_image(self):
 		captcha = self.check_captcha()
-		if captcha:
+		if captcha[1]:
 			print("\tWARNING: Found captcha!")
 			captcha_image, *_ = captcha
 			timeout = time.time()
@@ -50,20 +50,19 @@ class Find_Captcha(Find_Element, Wait_Until_Element):
 			return 225
 		return 200
 
-	def resolve_captcha(self):
+	def resolve_captcha(self, key):
 		captcha = self.check_captcha()
-		while captcha:
-			captcha_image, captcha_input, captcha_submit = captcha
-			print("\tWARNING: Found captcha!")
-			try:
-				captcha_image.screenshot("captcha.png")
-				captcha_input.send_keys(input("\t\tSolve Captcha:\n\t\t> "))
-				captcha_submit.click()
-			except WebDriverException:
-				os.remove("captcha.png")
-				break
+		captcha_image, captcha_input, captcha_submit = captcha
 
-			self.wait_until_element(
-				By.TAG_NAME, "video", timeout=3
-			).get_attribute("src")
-			captcha = self.check_captcha()
+		if not captcha_input:
+			return True
+
+		captcha_input.send_keys(key)
+		captcha_submit.click()
+
+		try:
+			self.wait_until_element(By.TAG_NAME, "video", timeout=3)
+		except TimeoutException:
+			return False
+
+		return True if self.check_captcha()[1] else False

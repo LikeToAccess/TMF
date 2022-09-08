@@ -76,7 +76,17 @@ function captchaPopUp(src, result, id) {
 				"Accept": "application/json",
 				"Content-Type": "application/json"
 			},
-			body: JSON.stringify(result)  // Pass through result context as JSON
+			body: JSON.stringify(
+				{
+					// "result": {
+					// 	"title": result.title,
+					// 	"poster_url": result.poster_url,
+					// 	"url": result.url,
+					// 	"data": result.data
+					// }
+					"result": result
+				}
+			)  // Pass through result context as JSON
 		}).catch(function() {
 			alert("API Error!");
 		});
@@ -87,6 +97,7 @@ function captchaPopUp(src, result, id) {
 		if (raw_response.status == 200) {
 			console.log("Captcha solved!");
 			overlayElement.remove();
+			await onItemClick(result, id);
 		} else if (raw_response.status == 225) {
 			console.log("Captcha not solved.");
 		} else {
