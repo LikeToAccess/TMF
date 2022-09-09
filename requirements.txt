@@ -6,3 +6,5 @@ waitress
 flask-cors
 flask_restful
 wget
+tmdbv3api
+pycountry

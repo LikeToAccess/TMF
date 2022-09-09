@@ -135,9 +135,9 @@ class Captcha(Resource):
 		if not contains_only_letters(key):
 			return {"message": "Bad request (CAPTCHA contains only uppercase letters)"}, 400
 
-		if args["result"]:
-			result = json.loads(args["result"].replace("'" ,'"'))
-			# print(json.dumps(result, indent=4))
+		# if args["result"]:
+		# 	result = json.loads(args["result"].replace("'" ,'"'))
+		# 	print(json.dumps(result, indent=4))
 
 		captcha_is_resolved = scraper.resolve_captcha(key)
 		print(f"CAPTCHA is solved? ({captcha_is_resolved})")
