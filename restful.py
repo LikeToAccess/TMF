@@ -151,9 +151,9 @@ def main():
 	api.add_resource(Test, "/test")
 	api.add_resource(Catagory, "/catagory")
 	api.add_resource(Captcha, "/captcha")
-	# serve(app, host=HOST, port=PORT)
+	serve(app, host=HOST, port=PORT)
 	# For debugging only!
-	app.run(host=HOST, port=PORT, debug=True)
+	# app.run(host=HOST, port=PORT, debug=True)
 
 
 if __name__ == "__main__":
