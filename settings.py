@@ -21,9 +21,12 @@ HEADLESS = True
 # accessable from whatever this is set to.
 # The default value is "0.0.0.0" (for localhost) and 8080.
 HOST = "0.0.0.0"
-PORT = 8081
+PORT = 8080
 
 # Root Plex library directory, this will set the download location for all
 # media.
 # The default value is "../"
 ROOT_LIBRARY_LOCATION = "../"
+
+# API
+TMDB_API_KEY = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"

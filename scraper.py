@@ -288,7 +288,7 @@ class Scraper(Find_Captcha):
 
 		return results_data
 
-	def convert_data_from_page_link(self, current_page_url, timeout=30):
+	def convert_data_from_page_link(self, current_page_url, timeout=60):
 		print("\tWaiting for video to load... (up to 60 seconds)")
 		current_page_url += page_extension if not current_page_url.endswith(page_extension) else ""
 		self.open_link(current_page_url)
@@ -299,7 +299,7 @@ class Scraper(Find_Captcha):
 		# self.resolve_captcha()
 
 		original_video_url = self.wait_until_element(
-			By.TAG_NAME, "video", timeout=60
+			By.TAG_NAME, "video", timeout=timeout
 		).get_attribute("src")
 		print("\tVideo loaded.")
 
