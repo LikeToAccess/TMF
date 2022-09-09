@@ -29,4 +29,4 @@ PORT = 8080
 ROOT_LIBRARY_LOCATION = "../"
 
 # API
-TMDB_API_KEY = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+TMDB_API_KEY = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
