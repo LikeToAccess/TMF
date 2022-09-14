@@ -50,6 +50,26 @@ def contains_only_letters(data):
 	matches = re.findall(r"[^a-zA-Z]+", data)
 	return not bool(matches)
 
+def find_show_title_from_tv_show(data):
+	title = re.sub(r"(\s-\sSeason\s\d)(?!.*\s-\sSeason\s\d)", "", data)
+	# print(title)
+	return title
+
+def find_season_number_from_tv_show(data):
+	season_number = \
+		re.findall(
+			r"(\d+)$",
+			re.sub(
+				r"(.+)(?=\s-\sSeason\s\d)",
+				"",
+				data
+			)
+		)[0]
+	if len(season_number) < 2:
+		season_number = "0"+ season_number
+	return season_number
+
+
 class Format:
 	def __init__(self, result):
 		# print(url)
@@ -96,10 +116,26 @@ class Format:
 			)
 
 			safe_title = safe_title +" {tmdb-"+ tmdb_id +"}"
-			print(f"DEBUG: {safe_title}")
+			# print(f"DEBUG: {safe_title}")
 			safe_title = os.path.join(ROOT_LIBRARY_LOCATION, f"MOVIES/{safe_title}/{safe_title}.mp4")
 		elif self.type == "TV SHOW":
-			pass  # TV Show
+			show_title = find_show_title_from_tv_show(safe_title)
+			query = {
+				"query": show_title,
+				"first_air_date_year": self.release_year,
+			}
+			# print(f"DEBUG: {query}")
+			tmdb_results = search.tv_shows(query)
+			# print(tmdb_results)
+			tmdb_id = str(tmdb_results[0]["id"])
+
+			show_title = (
+				show_title if re.match(
+					r"^.*?\([^\d]*(\d+)[^\d]*\).*$", show_title
+				) else f"{show_title} ({self.release_year})"
+			) +" {tmdb-"+ tmdb_id +"}"
+			season_number = find_season_number_from_tv_show(safe_title)
+			safe_title = os.path.join(ROOT_LIBRARY_LOCATION, f"TV Shows/{show_title}/Season {season_number}/{safe_title}.mp4")
 		else:
 			pass  # Error?
 
@@ -111,7 +147,9 @@ class Format:
 
 
 def main():
-	file_name = Format('{"title":"Star Wars: Episode IX - The Rise of Skywalker","poster_url":"https://static.gomovies-online.cam/dist/img/C97to1aFchTRotSn63m3yc6k-oA7ou6anY3ruU8Lf2WevlTvJjQks5i_z5fTnadgcYV7z9aVPQcKUVsAxMzkDleaTjfFbze08mdub0ZTXuq3y0XxXiUGmfEQFgfeMfN-.jpg","url":"https://gomovies-online.cam/watch-film/star-wars-episode-ix-the-rise-of-skywalker/dz7sghqt","data":{"title":"Star Wars: Episode IX - The Rise of Skywalker","release_year":"2019","imdb_score":"IMDb: 6.5","duration":"141 min","release_country":"United States","genre":"Action, Adventure, Fantasy","description_preview":"An action movie that presents another story of the epic films series, Star Wars. This film continues with the events of The Last Jedi (2017). The...","key":"0","quality_tag":"HD","user_rating":"3.138890"}}')
+	# file_name = Format('{"title":"Star Wars: Episode IX - The Rise of Skywalker","poster_url":"https://static.gomovies-online.cam/dist/img/C97to1aFchTRotSn63m3yc6k-oA7ou6anY3ruU8Lf2WevlTvJjQks5i_z5fTnadgcYV7z9aVPQcKUVsAxMzkDleaTjfFbze08mdub0ZTXuq3y0XxXiUGmfEQFgfeMfN-.jpg","url":"https://gomovies-online.cam/watch-film/star-wars-episode-ix-the-rise-of-skywalker/dz7sghqt","data":{"title":"Star Wars: Episode IX - The Rise of Skywalker","release_year":"2019","imdb_score":"IMDb: 6.5","duration":"141 min","release_country":"United States","genre":"Action, Adventure, Fantasy","description_preview":"An action movie that presents another story of the epic films series, Star Wars. This film continues with the events of The Last Jedi (2017). The...","key":"0","quality_tag":"HD","user_rating":"3.138890"}}')
+	# file_name = Format('{"title":"The Lord of the Rings: The Rings of Power - Season 1","poster_url":"https://static.gomovies-online.cam/dist/img/_6CcL186P_Wy8TqINYCpv1vQlGZwG8GXTBxUUaWrejiI-K0wsXfLv1anrsfCNZa1E2PlY5giii9QK0441PQ_TZoOBqLiP7OR28gd2UUtKqBXSfHdwrRMYFPAkdQIIuww.jpg","url":"https://gomovies-online.cam/watch-tv-show/the-lord-of-the-rings-the-rings-of-power-season-1/Dok6Ozoc","data":{"title":"The Lord of the Rings: The Rings of Power - Season 1","release_year":"2022","imdb_score":"IMDb: 6.9","duration":"90 min","release_country":"United States","genre":"Drama, Action, Adventure","description_preview":"Epic drama set thousands of years before the events of J.R.R. Tolkien\'s \'The Hobbit\' and \'The Lord of the Rings\' follows an ensemble cast of...","key":"0","quality_tag":"HD","user_rating":"4.000000"}}')
+	file_name = Format('{"title":"John Adams - Season 1","poster_url":"https://static.gomovies-online.cam/dist/img/ZxbUx78gfmcmfZJK6HUKzq6Uc1um2ts3wz9XlD3a-yUgMoK1AaNmYqRAXBeuPJjXk_nZhodkYTIN9Wv_USV7ypr2MWUUsZKw0XaGOoJak-02pMsapG3mGeBQuKxpZnPQ.jpg","url":"https://gomovies-online.cam/watch-tv-show/john-adams-season-1/amA2Zf8B","data":{"title":"John Adams - Season 1","release_year":"2008","imdb_score":"IMDb: 8.5","duration":"71 min","release_country":"United States","genre":"Drama, Biography, History","description_preview":"The life of one of the USA\'s Founding Fathers, its second President, and his role in the nation\'s first 50...","key":"0","quality_tag":"HD","user_rating":"0.000000"}}')
 	file_name.run()
 
 
