@@ -87,7 +87,7 @@ class Format:
 			}
 
 			tmdb_results = search.movies(query)
-			tmdb_id = tmdb_results[0]["id"]
+			tmdb_id = str(tmdb_results[0]["id"])
 
 			safe_title = (
 				safe_title if re.match(
@@ -95,7 +95,7 @@ class Format:
 				) else f"{safe_title} ({self.release_year})"
 			)
 
-			safe_title = safe_title +" {"+ tmdb_id +"}"
+			safe_title = safe_title +" {tmdb-"+ tmdb_id +"}"
 			print(f"DEBUG: {safe_title}")
 			safe_title = os.path.join(ROOT_LIBRARY_LOCATION, f"MOVIES/{safe_title}/{safe_title}.mp4")
 		elif self.type == "TV SHOW":
