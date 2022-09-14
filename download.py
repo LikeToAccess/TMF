@@ -1,3 +1,15 @@
+# -*- coding: utf-8 -*-
+# filename          : download.py
+# description       : Handle downloads using request module
+# author            : Ian Ault
+# email             : liketoaccess@protonmail.com
+# date              : 09-14-2022
+# version           : v1.0
+# usage             : python download.py
+# notes             : This file should not be run directly
+# license           : MIT
+# py version        : 3.10.2 (must run on 3.6 or higher)
+#==============================================================================
 import os
 import time
 
