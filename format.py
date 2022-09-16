@@ -20,10 +20,10 @@ from settings import *
 from regions import regions
 
 
-tmdb = TMDb()
-tmdb.api_key = TMDB_API_KEY
-tmdb.language = "en"
-
+if TMDB_API_KEY:
+	tmdb = TMDb()
+	tmdb.api_key = TMDB_API_KEY
+	tmdb.language = "en"
 
 # {
 #   "title": "Star Wars: Episode IX - The Rise of Skywalker",
@@ -114,10 +114,12 @@ class Format:
 
 	def format_file_name(self, bad_characters="<>:\"/\\|?*"):
 		# File system safe title formatting removes reserved and non-ascii characters
-		search = Search()
-		region = regions[self.release_country]
+		if TMDB_API_KEY:
+			search = Search()
+			region = regions[self.release_country]
 		safe_title = re.sub(f"[{bad_characters}]", "", self.title).encode("ascii", "ignore").decode()
-		# print(self.title, safe_title)
+		tmdb_id = False
+
 		match self.type:
 			case "MOVIE":
 				query = {
@@ -126,8 +128,9 @@ class Format:
 					"region": region,
 				}
 
-				tmdb_results = search.movies(query)
-				tmdb_id = str(tmdb_results[0]["id"])# if tmdb_results else False
+				if TMDB_API_KEY:
+					tmdb_results = search.movies(query)
+					tmdb_id = str(tmdb_results[0]["id"])# if tmdb_results else False
 
 				safe_title = (
 					safe_title if re.match(
@@ -135,7 +138,7 @@ class Format:
 					) else f"{safe_title} ({self.release_year})"
 				)
 
-				safe_title = safe_title +" {tmdb-"+ tmdb_id +"}"
+				safe_title = safe_title + (" {tmdb-"+ tmdb_id +"}" if tmdb_id else "")
 				file_path = os.path.join(ROOT_LIBRARY_LOCATION, f"MOVIES/{safe_title}/{safe_title}.mp4")
 			case "TV SHOW", is_episode:
 				show_title = find_show_title_from_tv_show(safe_title)
@@ -144,9 +147,10 @@ class Format:
 					"first_air_date_year": self.release_year,
 				}
 				# print(query)
-				tmdb_results = search.tv_shows(query)
-				tmdb_id = str(tmdb_results[0]["id"]) if tmdb_results else False
-				if not tmdb_id: print(f"ERROR: No TMDb results for query: {query}")
+				if TMDB_API_KEY:
+					tmdb_results = search.tv_shows(query)
+					tmdb_id = str(tmdb_results[0]["id"]) if tmdb_results else False
+					if not tmdb_id: print(f"ERROR: No TMDb results for query: {query}")
 
 				show_title = (
 					show_title if re.match(
@@ -168,8 +172,9 @@ class Format:
 			case _:
 				pass  # Error?
 
-		count = len(tmdb_results)
-		print(f"\tFound {count} {'result' if count == 1 else 'results'} for TMDb lookup.")
+		if TMDB_API_KEY:
+			count = len(tmdb_results)
+			print(f"\tFound {count} {'result' if count == 1 else 'results'} for TMDb lookup.")
 		return file_path
 
 	def run(self):
