@@ -96,10 +96,11 @@ class Scraper(Find_Captcha):
 	def find_subtitles_source(self):
 		sequence = "/html/body/main/div/div/section/div[5]/div/script[2]"
 		element = self.wait_until_element_by_xpath(sequence)
-		subtitle_data = ast.literal_eval(
+		print(element.get_attribute("innerHTML").rsplit("window.subtitles = ", 1)[1])
+		subtitle_data = json.loads(
 			element.get_attribute("innerHTML").rsplit("window.subtitles = ", 1)[1]
 		)
-		keys = ["src", "lang"]
+		keys = ["src", "srclang"]
 		values = [jmespath.search(f"[*].{key}", subtitle_data) for key in keys]
 		values = list(zip(values[1],values[0]))
 
@@ -112,11 +113,12 @@ class Scraper(Find_Captcha):
 
 	def find_data_from_url(self, url):
 		print("Adding media via direct link...")
-		movie = bool(
-			self.find_element_by_xpath(
-				"/html/body/main/div/div/section/section/ul/li[2]/div/a"
-			).text == "MOVIES"
-		)
+		# movie = bool(
+		# 	self.find_element_by_xpath(
+		# 		"/html/body/main/div/div/section/section/ul/li[2]/div/a"
+		# 	).text == "MOVIES"
+		# )
+		movie = "/watch-film/" in url and "/watch-tv-show/" not in url
 
 		if movie: url += "-online-for-free.html" if not url.endswith("-online-for-free.html") else ""
 		base_element = self.find_element_by_xpath("//*[@class='_sxfctqTgvOf _sYsfmtEcNNg']")
@@ -289,7 +291,7 @@ class Scraper(Find_Captcha):
 		return results_data
 
 	def convert_data_from_page_link(self, current_page_url, timeout=60):
-		print("\tWaiting for video to load... (up to 60 seconds)")
+		print(f"\tWaiting for video to load... (up to {timeout} seconds)")
 		current_page_url += page_extension if not current_page_url.endswith(page_extension) else ""
 		self.open_link(current_page_url)
 		print("\tChecking for captchas...")
@@ -308,7 +310,7 @@ class Scraper(Find_Captcha):
 		# TODO: Instead of sleeping, this time could be used to get meta data about the movie
 
 		try:
-			print("\tWaiting for video resolution list...")
+			print(f"\tWaiting for video resolution list... (up to {timeout} seconds)")
 			best_quality = self.wait_until_element_by_xpath(
 				"//*[@class='changeClassLabel jw-reset jw-settings-content-item']",
 				timeout
