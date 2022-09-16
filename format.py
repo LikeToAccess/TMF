@@ -73,7 +73,7 @@ def find_season_number_from_tv_show(data):
 	return season_number
 
 def find_episode_number_from_tv_show(data):
-	print(data)
+	# print(data)
 	episode_number = \
 		re.findall(
 			r"(\d+)$",

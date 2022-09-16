@@ -96,7 +96,7 @@ class Scraper(Find_Captcha):
 	def find_subtitles_source(self):
 		sequence = "/html/body/main/div/div/section/div[5]/div/script[2]"
 		element = self.wait_until_element_by_xpath(sequence)
-		print(element.get_attribute("innerHTML").rsplit("window.subtitles = ", 1)[1])
+		# print(element.get_attribute("innerHTML").rsplit("window.subtitles = ", 1)[1])
 		subtitle_data = json.loads(
 			element.get_attribute("innerHTML").rsplit("window.subtitles = ", 1)[1]
 		)
@@ -351,13 +351,13 @@ class Scraper(Find_Captcha):
 			video_url, best_quality = data
 		else:
 			if current_page_url.endswith("-online-for-free.html"):
-				print("\tMedia is detected as 'TV SHOW Episode'.")
+				print("\tMedia is detected as 'TV SHOW: EPISODE'.")
 				data = self.convert_data_from_page_link(current_page_url, timeout=timeout)
 				if isinstance(data, int):
 					return [], data
 				video_url, best_quality = data
 			else:
-				print("\tMedia is detected as 'TV SHOW Season'.")
+				print("\tMedia is detected as 'TV SHOW: SEASON'.")
 				print("\tWaiting for season page to load...")
 				self.open_link(current_page_url)
 
