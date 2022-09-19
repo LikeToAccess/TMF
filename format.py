@@ -127,10 +127,13 @@ class Format:
 		else:
 			self.type = "MISC"
 
+		if isinstance(self.release_country, list):
+			self.release_country = self.release_country[0]
+		self.region = regions[self.release_country]
+
 	def format_file_name(self, bad_characters="<>:\"/\\|?*"):
 		# File system safe title formatting removes reserved and non-ascii characters
 		safe_title = make_string_filesystem_safe(self.title, bad_characters)
-		region = regions[self.release_country]
 		tmdb_id = False
 
 		match self.type:
@@ -138,7 +141,7 @@ class Format:
 				query = {
 					"query": safe_title,
 					"primary_release_year": self.release_year,
-					"region": region,
+					"region": self.region,
 				}
 
 				if TMDB_API_KEY:
