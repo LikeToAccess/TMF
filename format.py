@@ -31,9 +31,9 @@ if TMDB_API_KEY:
 # def filter_bad_characters(data, ):
 # 	return re.sub(bad_characters, "", data).encode("ascii", "ignore").decode()
 
-# def contains_only_letters(data):
-# 	matches = re.findall(r"[^a-zA-Z]+", data)
-# 	return not bool(matches)
+def contains_only_letters(data):
+	matches = re.findall(r"[^a-zA-Z]+", data)
+	return not bool(matches)
 
 def find_show_title_from_tv_show(data):
 	show_title = re.sub(r"(\s-\sSeason\s\d)(?!.*\s-\sSeason\s\d).*", "", data)
