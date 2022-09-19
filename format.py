@@ -161,7 +161,7 @@ class Format:
 				show_title = find_show_title_from_tv_show(safe_title)
 				query = {
 					"query": show_title,
-					"first_air_date_year": self.release_year,
+					# "first_air_date_year": self.release_year,
 				}
 
 				if TMDB_API_KEY:
@@ -170,20 +170,21 @@ class Format:
 					count = len(tmdb_results)
 					print(f"\tFound {count} {'result' if count == 1 else 'results'} for TMDb lookup.")
 					if not tmdb_results: print(f"\tWARNING: No TMDb results for query: {query}")
-					top = tmdb_results[0]
-					top_title = make_string_filesystem_safe(top["name"], bad_characters)
-					if top_title != show_title:
+					tmdb_top = tmdb_results[0]
+					tmdb_top_title = make_string_filesystem_safe(tmdb_top["name"], bad_characters)
+					if tmdb_top_title != show_title:
 						print(
-							f"\tWARNING: TMDb result, '{top_title}' is not an exact match for title, '{show_title}'."
+							f"\tWARNING: TMDb result, '{tmdb_top_title}' is not an exact match for title, '{show_title}'."
 						)
 						tmdb_results = []
-					tmdb_id = str(top["id"]) if tmdb_results else None
+					tmdb_id = str(tmdb_top["id"]) if tmdb_results else None
+					tmdb_first_air_date_year = re.sub(r"-\d{2}-\d{2}", "", tmdb_top["first_air_date"])
 
-				show_title = (
-					show_title if re.match(
-						r"^.*?\([^\d]*(\d+)[^\d]*\).*$", show_title
-					) else f"{show_title} ({self.release_year})"
-				)
+					show_title = (
+						show_title if re.match(
+							r"^.*?\([^\d]*(\d{4})[^\d]*\).*$", show_title
+						) else f"{show_title} ({tmdb_first_air_date_year})"
+					)
 
 				season_number = find_season_number_from_tv_show(safe_title)
 				file_path = os.path.join(
