@@ -14,6 +14,7 @@ import re
 import os
 import json
 
+from time import perf_counter
 from tmdbv3api import TMDb, Search
 
 from settings import *
@@ -142,6 +143,9 @@ class Format:
 		# File system safe title formatting removes reserved and non-ascii characters
 		safe_title = make_string_filesystem_safe(self.title, bad_characters)
 		tmdb_id = False
+		if TMDB_API_KEY:
+			print("Waiting for TMDb lookup...")
+			t1_start = perf_counter()
 
 		match self.type:
 			case "MOVIE":
@@ -193,9 +197,10 @@ class Format:
 					)
 
 				season_number = find_season_number_from_tv_show(safe_title)
+				show_title = show_title.replace("-", "")
 				file_path = os.path.join(
 					ROOT_LIBRARY_LOCATION,
-					f"TV Shows/{show_title.replace('-', '') +(' {tmdb-'+ tmdb_id +'}' if tmdb_id else '')}/Season {season_number}"
+					f"TV Shows/{show_title +(' {tmdb-'+ tmdb_id +'}' if tmdb_id else '')}/Season {season_number}"
 				)
 
 				if is_episode:
@@ -208,6 +213,9 @@ class Format:
 			case _:
 				pass  # Error?
 
+		if TMDB_API_KEY:
+			t1_stop = perf_counter()
+			print(f"\tCompleted lookup in {round(t1_stop-t1_start,2)}s.")
 		return file_path
 
 	def run(self):
