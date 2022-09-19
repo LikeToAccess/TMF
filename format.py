@@ -127,8 +127,9 @@ class Format:
 		else:
 			self.type = "MISC"
 
-		if isinstance(self.release_country, list):
-			self.release_country = self.release_country[0]
+		if ", " in self.release_country:
+			self.release_country = self.release_country.split(", ")[0]
+		# print(self.release_country)
 		self.region = regions[self.release_country]
 
 	def format_file_name(self, bad_characters="<>:\"/\\|?*"):
