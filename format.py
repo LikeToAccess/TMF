@@ -60,30 +60,36 @@ def find_episode_title_from_tv_show(data):
 	episode_title = re.sub(r".*(\sEpisode\s\d+\s)(?!.*\sEpisode\s\d+\s)", "", data)
 	return episode_title
 
-def find_season_number_from_tv_show(data):
-	season_number = \
-		re.findall(
-			r"(\d+)$",
+def find_season_number_from_tv_show(data, regex=r"(\s-\sSeason\s\d)(?!.*\s-\sSeason\s\d)"):
+	try:
+		season_number = \
 			re.findall(
-				# r"(.+)(?=\s-\sSeason\s\d)",
-				r"(\s-\sSeason\s\d)(?!.*\s-\sSeason\s\d)",
-				data
-			)[-1]
-		)[0]
+				r"(\d+)$",
+				re.findall(
+					# r"(.+)(?=\s-\sSeason\s\d)",
+					regex,
+					data
+				)[-1]
+			)[0]
+	except IndexError:
+		return find_season_number_from_tv_show(data, r"(\s-\sSeason\d)(?!.*\s-\sSeason\d)")
 	if len(season_number) < 2:
 		season_number = "0"+ season_number
 	return season_number
 
-def find_episode_number_from_tv_show(data):
+def find_episode_number_from_tv_show(data, regex=r"(\sEpisode\s\d+)(?!.*\sEpisode\s\d+)"):
 	# print(data)
-	episode_number = \
-		re.findall(
-			r"(\d+)$",
+	try:
+		episode_number = \
 			re.findall(
-				r"(\sEpisode\s\d+)(?!.*\sEpisode\s\d+)",
-				data
-			)[-1]
-		)[0]
+				r"(\d+)$",
+				re.findall(
+					regex,
+					data
+				)[-1]
+			)[0]
+	except IndexError:
+		return find_episode_number_from_tv_show(data, r"(\sEpisode\d+)(?!.*\sEpisode\d+)")
 	if len(episode_number) < 2:
 		episode_number = "0"+ episode_number
 	return episode_number
