@@ -134,11 +134,13 @@ class Format:
 		}
 
 		tmdb_id = None
-		if TMDB_API_KEY:
+		while TMDB_API_KEY:
 			tmdb_results = search.movies(query)
 			count = len(tmdb_results)
 			print(f"\tFound {count} {'result' if count == 1 else 'results'} for TMDb lookup.")
-			if not tmdb_results: print(f"\tWARNING: No TMDb results for query: {query}")
+			if not tmdb_results:
+				print(f"\tWARNING: No TMDb results for query: '{query}'.")
+				break
 			tmdb_top = tmdb_results[0]
 			tmdb_top_title = make_string_filesystem_safe(tmdb_top["original_title"], self.bad_characters)
 			if tmdb_top_title != self.safe_title:
@@ -154,6 +156,7 @@ class Format:
 					f"\tWARNING: TMDb release date, '{tmdb_release_date_year}'",
 					f"is not an exact match for release, '{self.release_year}' (this will be ignored)."
 				)
+			break
 
 		self.safe_title = (
 			self.safe_title if re.match(
@@ -174,12 +177,14 @@ class Format:
 		}
 
 		tmdb_id = None
-		if TMDB_API_KEY:
+		while TMDB_API_KEY:
 			tmdb_results = search.tv_shows(query)
 			# print_tmdb_results(tmdb_results)
 			count = len(tmdb_results)
 			print(f"\tFound {count} {'result' if count == 1 else 'results'} for TMDb lookup.")
-			if not tmdb_results: print(f"\tWARNING: No TMDb results for query: {query}")
+			if not tmdb_results:
+				print(f"\tWARNING: No TMDb results for query: {query}")
+				break
 			tmdb_top = tmdb_results[0]
 			tmdb_top_title = make_string_filesystem_safe(tmdb_top["name"], self.bad_characters)
 			if tmdb_top_title != show_title:
@@ -196,6 +201,7 @@ class Format:
 					r"^.*?\([^\d]*(\d{4})[^\d]*\).*$", show_title
 				) else f"{show_title} ({tmdb_first_air_date_year})"
 			)
+			break
 
 		season_number = find_season_number_from_tv_show(self.safe_title)
 		show_title = show_title.replace("-", "")
