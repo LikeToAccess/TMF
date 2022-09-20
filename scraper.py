@@ -360,6 +360,8 @@ class Scraper(Find_Captcha):
 				print("\tMedia is detected as 'TV SHOW: SEASON'.")
 				print("\tWaiting for season page to load...")
 				self.open_link(current_page_url)
+				# TODO: Make seasons work
+				episode_urls = 
 
 		print("\tWaiting for subtitles...")
 		subtitles = self.find_subtitles_source()
