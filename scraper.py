@@ -38,6 +38,7 @@ class Scraper(Find_Captcha):
 		options.add_argument("autoplay-policy=no-user-gesture-required")
 		options.add_argument("log-level=3")
 		options.add_argument(f"user-data-dir={user_data_dir}")
+		options.add_argument("--ignore-certificate-errors-spki-list")
 		if HEADLESS:
 			options.add_argument("--headless")
 			options.add_argument("window-size=1920,1080")
@@ -326,6 +327,22 @@ class Scraper(Find_Captcha):
 
 		return original_video_url, best_quality
 
+	def convert_link(self, video_url, best_quality):
+		print("\tWaiting for subtitles...")
+		subtitles = self.find_subtitles_source()
+		if subtitles:
+			print(f"\tFound {len(subtitles)} English {'subtitle' if len(subtitles) == 1 else 'subtitles'}.")
+		else:
+			print("\tNo English subtitles available.")
+
+		modified_video_url = video_url \
+			.replace("/360?name=", f"/{best_quality}?name=") \
+			.replace("_360&token=ip=", f"_{best_quality}&token=ip=")
+
+		print(f"\tVideo link converted to {best_quality}p.")
+
+		return [modified_video_url]
+
 	def get_video_url_from_page_link(self, page_link, timeout=30):
 		if page_link == 404: return page_link
 		print("Waiting for page to load...")
@@ -361,23 +378,36 @@ class Scraper(Find_Captcha):
 				print("\tWaiting for season page to load...")
 				self.open_link(current_page_url)
 				# TODO: Make seasons work
-				episode_urls = 
+				urls = self.find_elements_by_xpath("//*[@class=\"_sXFMWEIryHd \"]")
+				episode_urls = []
+				season_urls = []
+				for url in urls:
+					url = url.get_attribute("href")
+					if url.endswith("-online-for-free.html"):
+						episode_urls.append(url)
+					else:
+						season_urls.append(url)
 
-		print("\tWaiting for subtitles...")
-		subtitles = self.find_subtitles_source()
-		if subtitles:
-			print(f"\tFound {len(subtitles)} English {'subtitle' if len(subtitles) == 1 else 'subtitles'}.")
-		else:
-			print("\tNo English subtitles available.")
+				results = []
+				for episode_url in episode_urls:
+					result, _ = self.get_video_url_from_page_link(episode_url)
+					results += result
+					# data = self.convert_data_from_page_link(episode_url, timeout=timeout)
+					# if isinstance(data, int):
+					# 	return [], data
+					# video_url, best_quality = data
+					# print(data)
+				print(
+					f"\tCompleted all scraping for season in {round(time.time()-get_video_url_timestamp,2)}s."
+				)
+				return results, 200
 
-		modified_video_url = video_url \
-			.replace("/360?name=", f"/{best_quality}?name=") \
-			.replace("_360&token=ip=", f"_{best_quality}&token=ip=")
+				# DEBUG
+				# print("Episode URLs:\n\t"+ "\n\t".join(episode_urls) +"\nSeason URLs:\n\t"+"\n\t".join(season_urls))
 
-		print(f"\tVideo link converted to {best_quality}p.")
+		results = self.convert_link(video_url, best_quality)
 		print(f"\tCompleted all scraping in {round(time.time()-get_video_url_timestamp,2)}s.")
-
-		return [modified_video_url], 200
+		return results, 200
 
 	def run(self):
 		while True:
