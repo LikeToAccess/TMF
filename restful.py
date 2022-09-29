@@ -37,24 +37,37 @@ threads = []
 class Queue_Downloads:
 	def __init__(self, query, data):
 		self.query = query
-		self.data = data
+		self.data = [data]
 		self.queue = []
+		self.video_url_list = []
 
 	def setup(self):
-		# TODO: Make TV Shows work
-		self.queue, status = scraper.get_video_url_from_page_link(
+		self.queue, status, self.video_url_list = scraper.get_video_url_from_page_link(
 			self.query
 		)
 
 		return status
 
 	def run(self):
-		for url in self.queue:
-			download = Download(url, Format(self.data).format_file_name())
+		print(f"DEBUG: {self.queue}")
+		return_codes = []
+		for url, data in zip(self.queue, self.video_url_list):
+			# self.data is for the Season, NOT for the Episode, the new data needs to be gathered per episode
+			print("DEBUG: Starting download...")
+			data = scraper.find_data_from_url(data)
+			print(json.loads(data)["title"])
+			download = Download(url, Format(data).format_file_name())
 			download.run()
-			# if the media is a TV Show than the data is useless
-			if download.verify(): return {"message": "Created", "data": self.data}, 201
-			return {"message": "Gone (failure to verify)"}, 410
+			# if the media is a TV Show than the given data is useless
+			return_codes.append(
+				[
+					{"message": "Created", "data": data}, 201
+				] if download.verify() else [
+					{"message": "Gone (failure to verify)"}, 410
+				]
+			)
+
+		return return_codes
 
 class Search(Resource):
 	def get(self):
@@ -92,7 +105,8 @@ class Search(Resource):
 			image_data = f"data:image/png;base64,{image_data}"
 			return {"message": "CAPTCHA", "data": image_data}, 225
 
-		return qd.run()
+		response_codes = qd.run()
+		return response_codes[-1]
 
 class Test(Resource):
 	def get(self):

@@ -11,7 +11,6 @@
 # py version        : 3.10.2 (must run on 3.6 or higher)
 #==============================================================================
 import os
-import ast
 import time
 import platform
 import jmespath
@@ -352,26 +351,22 @@ class Scraper(Find_Captcha):
 
 		if self.current_page_is_404():
 			print("\tERROR: Page error 404!")
-			return [], 404
+			return [], 404, []
 
-		movie = bool(
-			self.find_element_by_xpath(
-				"/html/body/main/div/div/section/section/ul/li[2]/div/a"
-			).text == "MOVIES"
-		)
-
-		if movie:
+		if self.find_element_by_xpath(
+			"/html/body/main/div/div/section/section/ul/li[2]/div/a"
+		).text == "MOVIES":
 			print("\tMedia is detected as 'MOVIE'.")
 			data = self.convert_data_from_page_link(current_page_url, timeout=timeout)
 			if isinstance(data, int):
-				return [], data
+				return [], data, []
 			video_url, best_quality = data
 		else:
 			if current_page_url.endswith("-online-for-free.html"):
 				print("\tMedia is detected as 'TV SHOW: EPISODE'.")
 				data = self.convert_data_from_page_link(current_page_url, timeout=timeout)
 				if isinstance(data, int):
-					return [], data
+					return [], data, []
 				video_url, best_quality = data
 			else:
 				print("\tMedia is detected as 'TV SHOW: SEASON'.")
@@ -390,7 +385,7 @@ class Scraper(Find_Captcha):
 
 				results = []
 				for episode_url in episode_urls:
-					result, _ = self.get_video_url_from_page_link(episode_url)
+					result, *_ = self.get_video_url_from_page_link(episode_url)
 					results += result
 					# data = self.convert_data_from_page_link(episode_url, timeout=timeout)
 					# if isinstance(data, int):
@@ -400,14 +395,16 @@ class Scraper(Find_Captcha):
 				print(
 					f"\tCompleted all scraping for season in {round(time.time()-get_video_url_timestamp,2)}s."
 				)
-				return results, 200
+				return results, 200, episode_urls
 
 				# DEBUG
-				# print("Episode URLs:\n\t"+ "\n\t".join(episode_urls) +"\nSeason URLs:\n\t"+"\n\t".join(season_urls))
+				# print(
+				# 	"Episode URLs:\n\t"+ "\n\t".join(episode_urls) +"\nSeason URLs:\n\t"+"\n\t".join(season_urls)
+				# )
 
-		results = self.convert_link(video_url, best_quality)
-		print(f"\tCompleted all scraping in {round(time.time()-get_video_url_timestamp,2)}s.")
-		return results, 200
+		results = self.convert_link(video_url, best_quality)  # TODO: Need to pass through video_url!
+		print(f"\tCompleted scraping in {round(time.time()-get_video_url_timestamp,2)}s.")
+		return results, 200, [video_url]
 
 	def run(self):
 		while True:
