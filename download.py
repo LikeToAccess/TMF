@@ -17,6 +17,7 @@ import wget
 import requests
 
 from requests.exceptions import *
+from settings import *
 from file import *
 
 
@@ -45,6 +46,9 @@ def create_request(url):
 		"user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36"
 	}
 
+	if url == "":  # URL is blank due to unsolved captchas
+		return None
+
 	try:
 		request = requests.get(
 			url,
@@ -67,7 +71,8 @@ class Download:
 		self.request = create_request(url)
 		self.target_size = None
 
-		print(f"\tRequest status code: {self.request.status_code}.")
+		if self.request:
+			print(f"\tRequest status code: {self.request.status_code}.")
 
 	def progress_report(self, count, step=2.5):
 		percentage_complete = count * self.chunk_size / self.target_size * 100
@@ -78,6 +83,8 @@ class Download:
 		return None
 
 	def run(self):
+		if not self.request:
+			return
 		self.target_size = int(self.request.headers.get("content-length", 0))
 		url_download_timestamp = time.time()
 		path_already_exists = verify_path(self.destination)
@@ -87,6 +94,8 @@ class Download:
 		with open(self.destination +".crdownload", "wb") as file:
 			for count, chunk in enumerate(self.request.iter_content(chunk_size=self.chunk_size)):
 				file.write(chunk)
+				if DEBUG_MODE:
+					break
 				# TODO: Progress function not working :(
 				# current_progress = self.progress_report(count, step=2.5)
 				# if current_progress: print(current_progress)

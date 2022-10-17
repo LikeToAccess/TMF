@@ -98,9 +98,12 @@ class Format:
 	def __init__(self, result):
 		# print(url)
 		# print(result)
-		result = json.loads(result)  # Convert str to dict
+		if isinstance(result, str):
+			result = json.loads(result)  # Convert str to dict
+			print("\tLoaded result as JSON.")
 		data = result["data"]
 		url = result["url"]
+		print(f"DEBUG: {url} (url)")
 		title = result["title"]
 		release_country = data["release_country"]
 		self.release_year = data["release_year"]
@@ -209,6 +212,7 @@ class Format:
 			ROOT_LIBRARY_LOCATION,
 			f"TV Shows/{show_title +(' {tmdb-'+ tmdb_id +'}' if tmdb_id else '')}/Season {season_number}"
 		)
+		# print(file_path)
 
 		if is_episode:
 			episode_number = find_episode_number_from_tv_show(self.safe_title)
@@ -216,7 +220,8 @@ class Format:
 			file_path = os.path.join(
 				file_path,
 				f"{show_title} - s{season_number}e{episode_number} - {episode_title}.mp4"
-			)
+			).replace("\\","/")
+		# print(file_path)
 
 		return file_path
 
@@ -231,7 +236,7 @@ class Format:
 			case "TV SHOW", is_episode:
 				file_path = self.tv_show(is_episode)
 			case _:
-				pass  # Error?
+				print("\tERROR: \"file_path\" is undefined!")
 
 		if TMDB_API_KEY:
 			t1_stop = perf_counter()

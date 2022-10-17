@@ -121,6 +121,8 @@ class Scraper(Find_Captcha):
 		movie = "/watch-film/" in url and "/watch-tv-show/" not in url
 
 		if movie: url += "-online-for-free.html" if not url.endswith("-online-for-free.html") else ""
+		if self.current_url() != url: self.open_link(url)
+
 		base_element = self.find_element_by_xpath("//*[@class='_sxfctqTgvOf _sYsfmtEcNNg']")
 		title = base_element.find_element(By.XPATH, value="div[2]/div[1]/div[1]/h1").text
 		poster_url = base_element.find_element(By.XPATH, value="div[1]/div[1]/img")
@@ -351,7 +353,7 @@ class Scraper(Find_Captcha):
 
 		if self.current_page_is_404():
 			print("\tERROR: Page error 404!")
-			return [], 404, []
+			return [], 404, [], page_link
 
 		if self.find_element_by_xpath(
 			"/html/body/main/div/div/section/section/ul/li[2]/div/a"
@@ -359,14 +361,14 @@ class Scraper(Find_Captcha):
 			print("\tMedia is detected as 'MOVIE'.")
 			data = self.convert_data_from_page_link(current_page_url, timeout=timeout)
 			if isinstance(data, int):
-				return [], data, []
+				return [], data, [], page_link
 			video_url, best_quality = data
 		else:
 			if current_page_url.endswith("-online-for-free.html"):
 				print("\tMedia is detected as 'TV SHOW: EPISODE'.")
 				data = self.convert_data_from_page_link(current_page_url, timeout=timeout)
 				if isinstance(data, int):
-					return [], data, []
+					return [], data, [], page_link
 				video_url, best_quality = data
 			else:
 				print("\tMedia is detected as 'TV SHOW: SEASON'.")
@@ -384,8 +386,13 @@ class Scraper(Find_Captcha):
 						season_urls.append(url)
 
 				results = []
+				remaining_episode_urls = episode_urls[:]  # Make a copy of episode_urls not point to episode_urls
 				for episode_url in episode_urls:
-					result, *_ = self.get_video_url_from_page_link(episode_url)
+					result, http_status_code, *_, page_link = self.get_video_url_from_page_link(episode_url)
+					if http_status_code == 225:
+						print("\tPausing for captcha solve...")
+						return results, 225, remaining_episode_urls, page_link
+					remaining_episode_urls.remove(episode_url)
 					results += result
 					# data = self.convert_data_from_page_link(episode_url, timeout=timeout)
 					# if isinstance(data, int):
@@ -395,16 +402,16 @@ class Scraper(Find_Captcha):
 				print(
 					f"\tCompleted all scraping for season in {round(time.time()-get_video_url_timestamp,2)}s."
 				)
-				return results, 200, episode_urls
+				return results, 200, episode_urls, page_link
 
 				# DEBUG
 				# print(
 				# 	"Episode URLs:\n\t"+ "\n\t".join(episode_urls) +"\nSeason URLs:\n\t"+"\n\t".join(season_urls)
 				# )
 
-		results = self.convert_link(video_url, best_quality)  # TODO: Need to pass through video_url!
+		results = self.convert_link(video_url, best_quality)  # TODO: Need to pass through page_link!
 		print(f"\tCompleted scraping in {round(time.time()-get_video_url_timestamp,2)}s.")
-		return results, 200, [video_url]
+		return results, 200, [video_url], page_link
 
 	def run(self):
 		while True:
@@ -437,7 +444,8 @@ def wait_for_input():
 
 def main():
 	scraper = Scraper()
-	scraper.run()
+	# scraper.run()
+	print(scraper.find_data_from_url("https://gomovies-online.cam/watch-tv-show/rick-and-morty-season-6/dFl1ohVT/6SfvSx4p-online-for-free.html"))
 	# scraper.close()
 
 

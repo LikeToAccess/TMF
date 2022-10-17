@@ -37,27 +37,56 @@ threads = []
 class Queue_Downloads:
 	def __init__(self, query, data):
 		self.query = query
-		self.data = [data]
+		self.data = data
 		self.queue = []
 		self.video_url_list = []
+		self.page_link = []
 
 	def setup(self):
-		self.queue, status, self.video_url_list = scraper.get_video_url_from_page_link(
-			self.query
-		)
+		if not isinstance(self.data, list):
+			self.queue, status, self.video_url_list, self.page_link = scraper.get_video_url_from_page_link(
+				self.query
+			)
+		else:
+			self.video_url_list = []
+			for episode_url in self.data:
+				result, status, *_, self.page_link = scraper.get_video_url_from_page_link(episode_url)
+				self.video_url_list.append(result)
+			self.queue = self.data
 
-		return status
+		if status == 225:
+			return self.queue, status, self.video_url_list
+			#      results,    225,    remaining_episode_urls
+
+		return self.queue, status, None
 
 	def run(self):
-		print(f"DEBUG: {self.queue}")
+		# print(f"DEBUG: {self.queue}")
 		return_codes = []
 		for url, data in zip(self.queue, self.video_url_list):
 			# self.data is for the Season, NOT for the Episode, the new data needs to be gathered per episode
 			print("DEBUG: Starting download...")
-			data = scraper.find_data_from_url(data)
-			print(json.loads(data)["title"])
+			print(f"DEBUG: {data} (data)")
+			print(f"DEBUG: {self.page_link} (self.page_link)")
+			data = scraper.find_data_from_url(self.page_link)[0]
+			print(f"DEBUG: {data} (data)")
+
+			# for index, item in enumerate(data):
+			# 	data[index] = item.replace("'", '"')
+			# print(data)
+			# print(json.loads(data)["title"])
 			download = Download(url, Format(data).format_file_name())
 			download.run()
+			print("DEBUG: Download finished!")
+
+			if DEBUG_MODE:
+				return_codes.append(
+					[
+						{"message": "Created", "data": data}, 201
+					]
+				)
+				continue
+
 			# if the media is a TV Show than the given data is useless
 			return_codes.append(
 				[
@@ -91,22 +120,30 @@ class Search(Resource):
 		parser = reqparse.RequestParser()
 		parser.add_argument("query", required=True,  type=str, location="args")
 		parser.add_argument("data", required=False, type=str, location="args")
+		# parser.add_argument("remaining_episode_urls", required=False, type=str, location="json")
 		args = parser.parse_args()
 		if not args:
 			return {"message": "Bad request"}, 400
 
-		qd = Queue_Downloads(args["query"], args["data"])
-		status = qd.setup()
+		if "remaining_episode_urls" in args:
+			remaining_episode_urls = json.loads(args["remaining_episode_urls"].replace("'" ,'"'))
+			print(f"DEBUG: {json.dumps(remaining_episode_urls, indent=4)} (remaining_episode_urls)")
+		else:
+			remaining_episode_urls = None
+
+		qd = Queue_Downloads(args["query"], remaining_episode_urls if remaining_episode_urls else args["data"])
+		_, status, video_url_list = qd.setup()  # "_" is "queue" (completed results)
 
 		if status == 404:
 			return {"message": "Page not found"}, 404
 		if status == 225:
 			image_data = base64.b64encode(open("captcha.png", "rb").read()).decode("utf-8")
 			image_data = f"data:image/png;base64,{image_data}"
-			return {"message": "CAPTCHA", "data": image_data}, 225
+			return {"message": "CAPTCHA", "data": image_data, "remaining_episode_urls": video_url_list}, 225
 
 		response_codes = qd.run()
-		return response_codes[-1]
+		print(f"DEBUG: {response_codes[-1]}")
+		return response_codes[-1][0], response_codes[-1][1]
 
 class Test(Resource):
 	def get(self):
@@ -165,9 +202,11 @@ def main():
 	api.add_resource(Test, "/test")
 	api.add_resource(Catagory, "/catagory")
 	api.add_resource(Captcha, "/captcha")
-	serve(app, host=HOST, port=PORT)
-	# For debugging only!
-	# app.run(host=HOST, port=PORT, debug=True)
+
+	if DEBUG_MODE:
+		app.run(host=HOST, port=PORT, debug=True)
+	else:
+		serve(app, host=HOST, port=PORT)
 
 
 if __name__ == "__main__":

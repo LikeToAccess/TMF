@@ -21,7 +21,7 @@ const sleep = (milliseconds) => {
 	return new Promise(resolve => setTimeout(resolve, milliseconds));
 };
 
-function captchaPopUp(src, result, id) {
+function captchaPopUp(src, remainingEpisodeUrls, result, id) {
 	// <div class="overlay">
 	// 	<div id="captcha-container">
 	// 		<p>Captcha!</p>
@@ -97,7 +97,11 @@ function captchaPopUp(src, result, id) {
 		if (raw_response.status == 200) {
 			console.log("Captcha solved!");
 			overlayElement.remove();
-			await onItemClick(result, id);
+			if (remainingEpisodeUrls) {
+				await finishRemainingEpisodes(result, id, remainingEpisodeUrls);
+			} else {
+				await onItemClick(result, id);
+			}
 		} else if (raw_response.status == 225) {
 			console.log("Captcha not solved.");
 		} else {
@@ -156,6 +160,48 @@ function populateResults(results) {
 	});
 }
 
+async function finishRemainingEpisodes(result, id, remainingEpisodeUrls) {
+	var spinnerContainer = document.createElement("div");
+	var spinner = document.createElement("img");
+	var resultThumbnail = document.getElementById(id);
+	var searchResult = resultThumbnail.parentElement;
+
+	spinnerContainer.setAttribute("class", "spinner-container masked");
+	spinnerContainer.setAttribute("style", "cursor: url('not-allowed.svg'), not-allowed;");
+	spinnerContainer.appendChild(spinner);
+
+	spinner.setAttribute("src", "spinner.svg");
+	spinner.setAttribute("class", "spinner");
+	spinner.setAttribute("style", "animation: swirl-in-fwd 0.6s ease-out both;");
+
+	resultThumbnail.setAttribute("style", "filter: url(#svg-blur); cursor: url('not-allowed.svg'), not-allowed;");
+	resultThumbnail.setAttribute("onclick", "");
+
+	searchResult.appendChild(spinnerContainer);
+	console.log("Sending POST request for "+ result.title);
+
+	const response = await fetch(API_BASE_URL +"/search?query="+ query +"&data="+ JSON.stringify(result), {
+		method: "POST",
+		headers: {
+			"Accept": "application/json",
+			"Content-Type": "application/json"
+		},
+		body: JSON.stringify(
+			{
+				// "result": {
+				// 	"title": result.title,
+				// 	"poster_url": result.poster_url,
+				// 	"url": result.url,
+				// 	"data": result.data
+				// }
+				"remaining_episode_urls": remainingEpisodeUrls
+			}
+		)  // Pass through result context as JSON
+	}).catch(function() {
+		alert("API Error!");
+	});
+}
+
 async function onItemClick(result, id) {
 	console.log(result.data.quality_tag);
 	if (result.data.quality_tag == "CAM") {
@@ -186,7 +232,7 @@ async function onItemClick(result, id) {
 	query = result.url;
 	const response = await fetch(
 		API_BASE_URL +"/search?query="+ query +"&data="+ JSON.stringify(result), {
-		method: "POST"
+		method: "POST",
 	});
 
 	const raw_response = await response;
@@ -194,11 +240,12 @@ async function onItemClick(result, id) {
 
 	if (raw_response.status == 225) {
 		const captchaImage = http_result.data;
+		const remainingEpisodeUrls = http_result.remaining_episode_urls;
 		// console.log(captchaImage);
 		console.log(http_result);
 		stopSpinner(spinner);
 		console.log("HTTP response status code: "+ raw_response.status +"\n"+ http_result.message);
-		captchaPopUp(captchaImage, result, id);
+		captchaPopUp(captchaImage, remainingEpisodeUrls, result, id);
 	} else if (raw_response.status == 201) {
 		spinner.setAttribute("style", "animation: swirl-out-bck 0.6s ease-in both;");
 		await sleep(600);

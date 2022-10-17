@@ -19,7 +19,11 @@ class Find_Element:
 		self.driver = driver
 
 	def find_element(self, selector, sequence):
-		return self.driver.find_element(selector, sequence)
+		try:
+			return self.driver.find_element(selector, sequence)
+		except NoSuchElementException as exc:
+			raise NoSuchElementException(self.driver.current_url) from exc
+
 
 	def find_elements(self, selector, sequence):
 		return self.driver.find_elements(selector, sequence)

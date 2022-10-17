@@ -9,6 +9,7 @@ __pycache__/
 selenium_data/
 .DS_Store
 captcha.png
+.fleet/
 
 # Distribution / packaging
 .Python

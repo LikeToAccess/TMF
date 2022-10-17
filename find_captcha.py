@@ -43,7 +43,7 @@ class Find_Captcha(Find_Element, Wait_Until_Element):
 			timeout = time.time()
 			print("\tWaiting for captcha image to load...")
 			while captcha_image.size["width"] == 0 or time.time() - timeout < 5:
-				time.sleep(0.25)
+				time.sleep(0.1)
 			# self.driver.save_screenshot("screenshot.png")
 			captcha_image.screenshot("captcha.png")
 			print("\tCaptcha image saved.")
