@@ -70,7 +70,7 @@ function captchaPopUp(src, remainingEpisodeUrls, result, id) {
 		captchaSubmitButtonElement.setAttribute("style", "animation: pulsate-fwd 0.5s ease-in-out both;");
 		e.preventDefault();
 		captchaResponse = captchaResponseElement.value;
-		const response = await fetch(API_BASE_URL +"/captcha?key="+ captchaResponse, {
+		const response = await fetch(`${API_HOST}:${api_port}/captcha?key=${captchaResponse}`, {
 			method: "POST",
 			headers: {
 				"Accept": "application/json",
@@ -180,7 +180,7 @@ async function finishRemainingEpisodes(result, id, remainingEpisodeUrls) {
 	searchResult.appendChild(spinnerContainer);
 	console.log("Sending POST request for "+ result.title);
 
-	const response = await fetch(API_BASE_URL +"/search?query="+ query +"&data="+ JSON.stringify(result), {
+	const response = await fetch(`${API_HOST}:${api_port}/search?query=${query}&data=${JSON.stringify(result)}`, {
 		method: "POST",
 		headers: {
 			"Accept": "application/json",
@@ -231,7 +231,7 @@ async function onItemClick(result, id) {
 	console.log("Sending POST request for "+ result.title);
 	query = result.url;
 	const response = await fetch(
-		API_BASE_URL +"/search?query="+ query +"&data="+ JSON.stringify(result), {
+		`${API_HOST}:${api_port}/search?query=${query}&data=${JSON.stringify(result)}`, {
 		method: "POST",
 	});
 
@@ -272,6 +272,16 @@ async function stopSpinner(spinner) {
 	spinner.removeAttribute("style");
 }
 
+api_port = API_PORT;
+var betaToggleElement = document.getElementById("beta-toggle");
+betaToggleElement.addEventListener("change", function() {
+	if (this.checked) {
+		api_port = 8082;
+	} else {
+		api_port = API_PORT;
+	}
+});
+
 // var popButtomElement = document.getElementById("pop-button-id");
 // popButtomElement.addEventListener("submit", async function(e) {
 // 	popButtomElement.setAttribute("style", "animation: pulsate-fwd 0.5s ease-in-out both;");
@@ -289,7 +299,7 @@ formElement.addEventListener("submit", async function(e) {
 	document.body.appendChild(loadingWheel);
 	e.preventDefault();
 	query = document.getElementById("search-term-id").value;
-	const response = await fetch(API_BASE_URL +"/search?query="+ query, {
+	const response = await fetch(`${API_HOST}:${api_port}/search?query=${query}`, {
 		method: "GET"
 	}).catch(function() {
 		alert("API Error!");
