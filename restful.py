@@ -120,7 +120,7 @@ class Search(Resource):
 		parser = reqparse.RequestParser()
 		parser.add_argument("query", required=True,  type=str, location="args")
 		parser.add_argument("data", required=False, type=str, location="args")
-		# parser.add_argument("remaining_episode_urls", required=False, type=str, location="json")
+		parser.add_argument("remaining_episode_urls", required=False, type=str, location="json")
 		args = parser.parse_args()
 		if not args:
 			return {"message": "Bad request"}, 400

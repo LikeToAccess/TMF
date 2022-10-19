@@ -233,6 +233,15 @@ async function onItemClick(result, id) {
 	const response = await fetch(
 		`${API_HOST}:${api_port}/search?query=${query}&data=${JSON.stringify(result)}`, {
 		method: "POST",
+		headers: {
+			"Accept": "application/json",
+			"Content-Type": "application/json"
+		},
+		body: JSON.stringify(
+			{
+				"result": null
+			}
+		)
 	});
 
 	const raw_response = await response;
