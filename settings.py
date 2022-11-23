@@ -32,9 +32,12 @@ ROOT_LIBRARY_LOCATION = "../"
 # library is used to interact with TMDb's API to insert TMDb IDs into the
 # filenames
 # The default value is False.
-TMDB_API_KEY = False
+TMDB_API_KEY = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
 # Enables API serving via Flask instead of Waitress. Also disables downloading
 # full media and skips verification checks.
 # The default value is False.
 DEBUG_MODE = False
+
+# Google client ID for OAuth2 verification
+CLIENT_ID = "100000000000-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.apps.googleusercontent.com"
