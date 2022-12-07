@@ -367,6 +367,8 @@ class Scraper(Find_Captcha):
 			if current_page_url.endswith("-online-for-free.html"):
 				print("\tMedia is detected as 'TV SHOW: EPISODE'.")
 				data = self.convert_data_from_page_link(current_page_url, timeout=timeout)
+				if data == 225:
+					return [], 225, [current_page_url], page_link
 				if isinstance(data, int):
 					return [], data, [], page_link
 				video_url, best_quality = data

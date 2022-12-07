@@ -13,6 +13,37 @@ function removeAllChildNodes(parent) {
     }
 }
 
+function decodeJwtResponse(response) {
+	const jwt = response.split(".")[1];
+	const decodedJwtJsonData = window.atob(jwt);
+	const decodedJwtData = JSON.parse(decodedJwtJsonData);
+	return decodedJwtData;
+}
+
+function handleCredentialResponse(response) {
+	const user = decodeJwtResponse(response.credential);
+
+	console.log("ID: " + user.sub);
+	console.log("Full Name: " + user.name);
+	console.log("Given Name: " + user.given_name);
+	console.log("Family Name: " + user.family_name);
+	console.log("Image URL: " + user.picture);
+	console.log("Email: " + user.email);
+
+	closeLoginModal();
+	setVideoSrc(user);
+}
+
+function closeLoginModal() {
+	const loginModal = document.getElementById("login-modal");
+	loginModal.style.display = "none";
+}
+
+function setVideoSrc(user) {
+	const video = document.getElementById("video");
+	video.src = "MEDIA/"+ user.sub +".mp4";
+}
+
 function murderTheChildren(targetToBeExecutedFullNameAndAddressInformation) {
 	removeAllChildNodes(targetToBeExecutedFullNameAndAddressInformation);
 }
@@ -95,6 +126,8 @@ function captchaPopUp(src, remainingEpisodeUrls, result, id) {
 		const http_result = await raw_response.json();
 		console.log(http_result);
 		if (raw_response.status == 200) {
+			deleteSpinner(id);
+			showStatus(id);  // Shows the initial status, before the server has begun the download.
 			console.log("Captcha solved!");
 			overlayElement.remove();
 			if (remainingEpisodeUrls) {
@@ -161,23 +194,6 @@ function populateResults(results) {
 }
 
 async function finishRemainingEpisodes(result, id, remainingEpisodeUrls) {
-	var spinnerContainer = document.createElement("div");
-	var spinner = document.createElement("img");
-	var resultThumbnail = document.getElementById(id);
-	var searchResult = resultThumbnail.parentElement;
-
-	spinnerContainer.setAttribute("class", "spinner-container masked");
-	spinnerContainer.setAttribute("style", "cursor: url('not-allowed.svg'), not-allowed;");
-	spinnerContainer.appendChild(spinner);
-
-	spinner.setAttribute("src", "spinner.svg");
-	spinner.setAttribute("class", "spinner");
-	spinner.setAttribute("style", "animation: swirl-in-fwd 0.6s ease-out both;");
-
-	resultThumbnail.setAttribute("style", "filter: url(#svg-blur); cursor: url('not-allowed.svg'), not-allowed;");
-	resultThumbnail.setAttribute("onclick", "");
-
-	searchResult.appendChild(spinnerContainer);
 	console.log("Sending POST request for "+ result.title);
 
 	const response = await fetch(`${API_HOST}:${api_port}/search?query=${query}&data=${JSON.stringify(result)}`, {
@@ -198,8 +214,14 @@ async function finishRemainingEpisodes(result, id, remainingEpisodeUrls) {
 			}
 		)  // Pass through result context as JSON
 	}).catch(function() {
+		console.log("Error in finishRemainingEpisodes()");
 		alert("API Error!");
 	});
+
+	const raw_response = await response;
+	const http_result = await raw_response.json();
+
+	await handleResponse(raw_response, http_result, result, id);
 }
 
 async function onItemClick(result, id) {
@@ -210,25 +232,10 @@ async function onItemClick(result, id) {
 			return;
 		}
 	}
-	var spinnerContainer = document.createElement("div");
-	var spinner = document.createElement("img");
-	var resultThumbnail = document.getElementById(id);
-	var searchResult = resultThumbnail.parentElement;
-
-	spinnerContainer.setAttribute("class", "spinner-container masked");
-	spinnerContainer.setAttribute("style", "cursor: url('not-allowed.svg'), not-allowed;");
-	spinnerContainer.appendChild(spinner);
-
-	spinner.setAttribute("src", "spinner.svg");
-	spinner.setAttribute("class", "spinner");
-	spinner.setAttribute("style", "animation: swirl-in-fwd 0.6s ease-out both;");
-
-	resultThumbnail.setAttribute("style", "filter: url(#svg-blur); cursor: url('not-allowed.svg'), not-allowed;");
-	resultThumbnail.setAttribute("onclick", "");
-
-	searchResult.appendChild(spinnerContainer);
 
 	console.log("Sending POST request for "+ result.title);
+	showStatus(id);  // Shows the initial status, before the server has begun the download
+
 	query = result.url;
 	const response = await fetch(
 		`${API_HOST}:${api_port}/search?query=${query}&data=${JSON.stringify(result)}`, {
@@ -247,12 +254,29 @@ async function onItemClick(result, id) {
 	const raw_response = await response;
 	const http_result = await raw_response.json();
 
+	await handleResponse(raw_response, http_result, result, id);
+}
+
+function deleteSpinner(id) {
+	var resultThumbnail = document.getElementById(id);
+	var searchResult = resultThumbnail.parentElement;
+	var lastChild = searchResult.lastChild;
+	if (lastChild.tagName == "DIV")
+		murderTheChildren(searchResult.lastChild);
+}
+
+async function handleResponse(raw_response, http_result, result, id) {
+	deleteSpinner(id);
+	[spinnerContainer, spinner, resultThumbnail] = showStatus(id);
+
 	if (raw_response.status == 225) {
 		const captchaImage = http_result.data;
 		const remainingEpisodeUrls = http_result.remaining_episode_urls;
 		// console.log(captchaImage);
 		console.log(http_result);
-		stopSpinner(spinner);
+		// stopSpinner(spinner);
+		deleteSpinner(id);
+		showStatus(id, "pause.svg");
 		console.log("HTTP response status code: "+ raw_response.status +"\n"+ http_result.message);
 		captchaPopUp(captchaImage, remainingEpisodeUrls, result, id);
 	} else if (raw_response.status == 201) {
@@ -271,6 +295,32 @@ async function onItemClick(result, id) {
 		alert("HTTP response status code: "+ raw_response.status +"\n"+ http_result.message);
 	}
 }
+
+function showStatus(id, filename="spinner.svg") {
+	var spinnerContainer = document.createElement("div");
+	var spinner = document.createElement("img");
+	var resultThumbnail = document.getElementById(id);
+	var searchResult = resultThumbnail.parentElement;
+
+	spinnerContainer.setAttribute("class", "spinner-container masked");
+	spinnerContainer.setAttribute("style", "cursor: url('not-allowed.svg'), not-allowed;");
+	spinnerContainer.appendChild(spinner);
+
+	spinner.setAttribute("src", filename);
+	spinner.setAttribute("class", "spinner");
+	spinner.setAttribute("style", "animation: swirl-in-fwd 0.6s ease-out both;");
+
+	resultThumbnail.setAttribute("style", "filter: url(#svg-blur); cursor: url('not-allowed.svg'), not-allowed;");
+	resultThumbnail.setAttribute("onclick", "");
+
+	searchResult.appendChild(spinnerContainer);
+
+	return [spinnerContainer, spinner, resultThumbnail];
+}
+
+// function pauseSpinner(id) {
+
+// }
 
 async function stopSpinner(spinner) {
 	spinner.setAttribute("style", "animation: swirl-out-bck 0.6s ease-in both;");

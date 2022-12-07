@@ -47,6 +47,14 @@ def read_json_file(filename, encoding="utf8"):
 	return data
 
 def write_json_file(filename, data, encoding="utf8"):
+	"""Write json object to file
+
+	Args:
+		filename (str): File name
+		data (dict): Data to write to file
+		encoding (str, optional): Encoding. Defaults to "utf8".
+
+	"""
 	with open(filename, "w", encoding=encoding) as file:
 		json.dump(data, file, indent=4, sort_keys=True)
 

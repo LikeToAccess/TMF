@@ -20,10 +20,12 @@ from flask_cors import CORS
 from waitress import serve
 from flask import Flask
 
-from download import Download
+import downloadengine
+
 from settings import *
 from scraper import Scraper
 from format import Format, contains_only_letters
+# from users import User
 
 
 app = Flask(__name__)
@@ -75,26 +77,37 @@ class Queue_Downloads:
 			# 	data[index] = item.replace("'", '"')
 			# print(data)
 			# print(json.loads(data)["title"])
-			download = Download(url, Format(data).format_file_name())
-			download.run()
+
+			# download = Download(url, Format(data).format_file_name())
+			# download.run()
+
+			filename = Format(data).format_file_name()
+			downloadengine.queue.append({"url": url, "filename": filename})
+			print("Download queued...")
+			print(f"DEBUG: {downloadengine.queue}")
+
+			for index in range(len(downloadengine.queue)):
+				downloadengine.download_file(index)
+
 			print("DEBUG: Download finished!")
+			# Remove the item from the queue after the download is finished
+			downloadengine.queue.remove({"url": url, "filename": filename})
 
 			if DEBUG_MODE:
-				return_codes.append(
-					[
-						{"message": "Created", "data": data}, 201
-					]
-				)
+				return_codes.append([
+					{"message": "Created", "data": data}, 201
+				])
 				continue
 
 			# if the media is a TV Show than the given data is useless
-			return_codes.append(
-				[
-					{"message": "Created", "data": data}, 201
-				] if download.verify() else [
-					{"message": "Gone (failure to verify)"}, 410
-				]
-			)
+			# return_codes.append(
+			# 	[
+			# 		{"message": "Created", "data": data}, 201
+			# 	] if download.verify() else [
+			# 		{"message": "Gone (failure to verify)"}, 410
+			# 	]
+			# )
+			return_codes.append([{"message": "Created", "data": data}, 201])
 
 		return return_codes
 
@@ -125,11 +138,11 @@ class Search(Resource):
 		if not args:
 			return {"message": "Bad request"}, 400
 
+		remaining_episode_urls = None
 		if "remaining_episode_urls" in args:
-			remaining_episode_urls = json.loads(args["remaining_episode_urls"].replace("'" ,'"'))
-			print(f"DEBUG: {json.dumps(remaining_episode_urls, indent=4)} (remaining_episode_urls)")
-		else:
-			remaining_episode_urls = None
+			if args["remaining_episode_urls"]:
+				remaining_episode_urls = json.loads(args["remaining_episode_urls"].replace("'" ,'"'))
+				print(f"DEBUG: {json.dumps(remaining_episode_urls, indent=4)} (remaining_episode_urls)")
 
 		qd = Queue_Downloads(args["query"], remaining_episode_urls if remaining_episode_urls else args["data"])
 		_, status, video_url_list = qd.setup()  # "_" is "queue" (completed results)
@@ -196,14 +209,41 @@ class Captcha(Resource):
 			return {"message": "Bad request (CAPTCHA is incorrect)"}, 400
 		return {"message": "OK (CAPTCHA resolved)"}, 200
 
+# class Login(Resource):
+# 	def get(self):
+# 		return {"message": "Not implemented"}, 501
+
+# 	def post(self):
+# 		parser = reqparse.RequestParser()
+# 		parser.add_argument("token", required=True, type=str, location="args")
+# 		args = parser.parse_args()
+# 		if not args:
+# 			return {"message": "Bad request"}, 400
+
+# 		token = json.loads(
+# 			base64.b64decode(
+# 				args["token"].split(".")[1] + "=="
+# 			).decode("utf-8")
+# 		)
+
+# 		user = User(token["email"], token["name"])
+# 		if user:
+# 			user.modify()
+# 			return {"message": "OK (login successful)", "key": user.key}, 200
+# 		return {"message": "Forbidden (login does not exist)"}, 403
+
 
 def main():
 	api.add_resource(Search, "/search")
 	api.add_resource(Test, "/test")
 	api.add_resource(Catagory, "/catagory")
 	api.add_resource(Captcha, "/captcha")
+	# api.add_resource(Login, "/api/v1/users/login")
+
+	print(f"Starting server on port {PORT}...")
 
 	if DEBUG_MODE:
+		print("DEBUG: Running in debug mode")
 		app.run(host=HOST, port=PORT, debug=True)
 	else:
 		serve(app, host=HOST, port=PORT)
